@@ -510,8 +510,11 @@
             createSeats('center-seats', seatLayout.center);
             createSeats('right-seats', seatLayout.right);
             createSeats('sala-b-seats', seatLayout.salaB);
-            loadState();
+            
+            // Carrega o estado antes de qualquer outra operação de atualização
+            loadState(); 
             updateCounts();
+            
             document.getElementById('reset-button').onclick = resetAll;
             document.getElementById('share-button').onclick = shareOnWhatsApp;
 
