@@ -100,8 +100,12 @@
             transition: background-color 0.2s;
             cursor: pointer;
         }
-        .reset-button:hover {
+        .reset-button:hover:not(:disabled) {
             background-color: #dc2626;
+        }
+        .reset-button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
         }
         .share-button {
             padding: 0.5rem 1.5rem;
@@ -135,6 +139,16 @@
             font-weight: 700;
             color: #10b981;
             border: 1px solid #10b981;
+            transition: color 0.2s, border-color 0.2s;
+        }
+        .summary-box.advanced-share-mode {
+            background-color: #fff;
+            border: 2px solid #ef4444;
+            color: #ef4444;
+        }
+        .summary-box.zero-count {
+            color: #9ca3af;
+            border-color: #d1d5db;
         }
         .summary-box p {
             white-space: nowrap;
@@ -175,7 +189,7 @@
             width: 40px;
             height: 40px;
             color: #fff;
-            font-size: 1.5rem;
+            font-size: 1.25rem;
             font-weight: 700;
             border-radius: 0.5rem;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -197,18 +211,33 @@
         #plus-button:hover {
             background-color: #0c9c6f;
         }
-        .stand-count-display {
-            font-size: 2rem;
+        .stand-count-input {
+            font-size: 1.75rem;
             font-weight: 700;
             width: 60px;
             text-align: center;
+            background: transparent;
+            border: none;
+            outline: none;
+            -moz-appearance: textfield;
+        }
+        /* New rule to disable text selection */
+        .seat-section h2,
+        .stand-count-section h2,
+        .seat-count,
+        .stand-count-input,
+        .summary-box p {
+            user-select: none;
+            -moz-user-select: none; /* Firefox */
+            -webkit-user-select: none; /* Chrome, Safari, and Opera */
+            -ms-user-select: none; /* Internet Explorer/Edge */
         }
     </style>
 </head>
 <body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
     
     <header class="fixed-header" id="main-header">
-        <div class="summary-box">
+        <div class="summary-box" id="summary-box">
             <p>ASSISTÊNCIA: <span id="total-count">0</span> PESSOAS</p>
         </div>
         <div class="flex flex-row items-center gap-4 mt-2">
@@ -231,7 +260,7 @@
                 </div>
     
                 <div class="seat-section">
-                    <h2 class="text-xl font-semibold text-center">CENTRO</h2>
+                    <h2 class="text-xl font-semibold text-center">CENTRAL</h2>
                     <div id="center-seats" class="seat-grid"></div>
                     <p class="seat-count text-center" id="center-count">0</p>
                 </div>
@@ -252,7 +281,7 @@
                     <h2 class="text-xl font-semibold text-center">EM PÉ</h2>
                     <div class="stand-count-controls">
                         <button id="minus-button" class="stand-count-button">-</button>
-                        <span id="stand-count-display" class="stand-count-display">0</span>
+                        <input type="text" id="stand-count-input" class="stand-count-input" value="0">
                         <button id="plus-button" class="stand-count-button">+</button>
                     </div>
                 </div>
@@ -261,6 +290,8 @@
     </div>
 
     <script>
+        let isAdvancedShareMode = false;
+
         function adjustContentPadding() {
             const header = document.getElementById('main-header');
             const content = document.getElementById('main-content');
@@ -284,8 +315,19 @@
                 { rows: 5, cols: 5 }
             ]
         };
-        let standCount = 0;
         const storageKey = 'seatCounterState';
+
+        function getStandCount() {
+            const input = document.getElementById('stand-count-input');
+            const value = parseInt(input.value, 10);
+            return Math.max(0, isNaN(value) ? 0 : value);
+        }
+
+        function setStandCount(value) {
+            const input = document.getElementById('stand-count-input');
+            input.value = Math.max(0, value);
+        }
+
         function saveState() {
             const seats = {
                 left: Array.from(document.querySelectorAll('#left-seats .seat.selected')).map(seat => {
@@ -309,15 +351,15 @@
                     return { row, col };
                 })
             };
-            const state = { seats, standCount };
+            const state = { seats, standCount: getStandCount() };
             localStorage.setItem(storageKey, JSON.stringify(state));
         }
+        
         function loadState() {
             const savedState = localStorage.getItem(storageKey);
             if (savedState) {
                 const state = JSON.parse(savedState);
-                standCount = state.standCount || 0;
-                document.getElementById('stand-count-display').textContent = standCount;
+                setStandCount(state.standCount || 0);
                 document.querySelectorAll('.seat.selected').forEach(seat => {
                     seat.classList.remove('selected');
                     seat.innerHTML = '';
@@ -375,11 +417,20 @@
             saveState();
         }
         function updateCounts() {
+            const summaryBox = document.querySelector('.summary-box');
+            const resetButton = document.getElementById('reset-button');
             const leftSeats = document.querySelectorAll('#left-seats .seat.selected').length;
             const centerSeats = document.querySelectorAll('#center-seats .seat.selected').length;
             const rightSeats = document.querySelectorAll('#right-seats .seat.selected').length;
             const salaBSeats = document.querySelectorAll('#sala-b-seats .seat.selected').length;
-            const total = leftSeats + centerSeats + rightSeats + salaBSeats + standCount;
+            const total = leftSeats + centerSeats + rightSeats + salaBSeats + getStandCount();
+            
+            // Se o total for zero, desabilita o modo de compartilhamento avançado
+            if (total === 0) {
+                isAdvancedShareMode = false;
+                summaryBox.classList.remove('advanced-share-mode');
+            }
+            
             let pessoasText = "";
             if (total === 1) {
                 pessoasText = "PESSOA";
@@ -394,8 +445,12 @@
             const shareButton = document.getElementById('share-button');
             if (total === 0) {
                 shareButton.disabled = true;
+                resetButton.disabled = true;
+                summaryBox.classList.add('zero-count');
             } else {
                 shareButton.disabled = false;
+                resetButton.disabled = false;
+                summaryBox.classList.remove('zero-count');
             }
         }
         function resetAll() {
@@ -403,8 +458,7 @@
                 seat.classList.remove('selected');
                 seat.innerHTML = '';
             });
-            standCount = 0;
-            document.getElementById('stand-count-display').textContent = standCount;
+            setStandCount(0);
             updateCounts();
             localStorage.removeItem(storageKey);
         }
@@ -414,12 +468,26 @@
             const month = String(today.getMonth() + 1).padStart(2, '0');
             const year = today.getFullYear();
             const formattedDate = `${day}/${month}/${year}`;
-            const total = parseInt(document.querySelector('#total-count').textContent, 10);
-            const pessoasText = total === 1 ? "pessoa" : "pessoas";
-            const message = `${formattedDate}\nAssistência presencial: ${total} ${pessoasText}`;
+            
+            let message;
+            if (isAdvancedShareMode) {
+                const leftSeats = document.querySelectorAll('#left-seats .seat.selected').length;
+                const centerSeats = document.querySelectorAll('#center-seats .seat.selected').length;
+                const rightSeats = document.querySelectorAll('#right-seats .seat.selected').length;
+                const salaBSeats = document.querySelectorAll('#sala-b-seats .seat.selected').length;
+                const total = leftSeats + centerSeats + rightSeats + salaBSeats + getStandCount();
+                
+                message = `Assistência presencial ${formattedDate}:\nEsquerda: ${leftSeats}\nCentral: ${centerSeats}\nDireita: ${rightSeats}\nSala B: ${salaBSeats}\nEm pé: ${getStandCount()}\n*Total: ${total} pessoas*`;
+            } else {
+                const total = parseInt(document.querySelector('#total-count').textContent, 10);
+                const pessoasText = total === 1 ? "pessoa" : "pessoas";
+                message = `${formattedDate}\nAssistência presencial: *${total} ${pessoasText}*`;
+            }
+
             const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
             window.open(whatsappUrl, '_blank');
         }
+
         document.addEventListener('DOMContentLoaded', () => {
             createSeats('left-seats', seatLayout.left);
             createSeats('center-seats', seatLayout.center);
@@ -429,20 +497,45 @@
             updateCounts();
             document.getElementById('reset-button').onclick = resetAll;
             document.getElementById('share-button').onclick = shareOnWhatsApp;
-            document.getElementById('plus-button').onclick = () => {
-                standCount++;
-                document.getElementById('stand-count-display').textContent = standCount;
+
+            document.getElementById('summary-box').ondblclick = () => {
+                const total = parseInt(document.querySelector('#total-count').textContent, 10);
+                if (total > 0) {
+                    isAdvancedShareMode = !isAdvancedShareMode;
+                    const summaryBox = document.getElementById('summary-box');
+                    if (isAdvancedShareMode) {
+                        summaryBox.classList.add('advanced-share-mode');
+                    } else {
+                        summaryBox.classList.remove('advanced-share-mode');
+                    }
+                }
+            };
+
+            const standInput = document.getElementById('stand-count-input');
+            const plusButton = document.getElementById('plus-button');
+            const minusButton = document.getElementById('minus-button');
+            
+            plusButton.onclick = () => {
+                setStandCount(getStandCount() + 1);
                 updateCounts();
                 saveState();
             };
-            document.getElementById('minus-button').onclick = () => {
-                if (standCount > 0) {
-                    standCount--;
-                    document.getElementById('stand-count-display').textContent = standCount;
-                    updateCounts();
-                    saveState();
-                }
+
+            minusButton.onclick = () => {
+                setStandCount(getStandCount() - 1);
+                updateCounts();
+                saveState();
             };
+            
+            standInput.oninput = (e) => {
+                // Remove qualquer caractere que não seja um número
+                standInput.value = standInput.value.replace(/[^0-9]/g, '');
+                
+                // Atualiza a contagem e salva o estado
+                updateCounts();
+                saveState();
+            };
+            
             adjustContentPadding();
         });
     </script>
