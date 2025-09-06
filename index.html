@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
     <title>Contador de Assistência</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor'%3E%3Cpath d='M19 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2zM9.5 17L5 12.5l1.5-1.5L9.5 14l6-6L17 9.5l-7.5 7.5z'/%3E%3C/svg%3E">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -14,7 +14,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            min-height: 100vh;
+            min-height: 10vh;
         }
         .fixed-header {
             position: fixed;
@@ -28,6 +28,9 @@
             background-color: #f3f4f6;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             z-index: 100;
+            will-change: transform;
+            -webkit-transform: translate3d(0, 0, 0);
+            transform: translate3d(0, 0, 0);
         }
         .container {
             display: flex;
@@ -222,20 +225,30 @@
             outline: none;
             -moz-appearance: textfield;
         }
-        /* New rule to disable text selection */
+        .error-message {
+            color: #ef4444;
+            font-weight: 600;
+        }
         .seat-section h2,
         .stand-count-section h2,
         .seat-count,
         .stand-count-input,
         .summary-box p {
             user-select: none;
-            -moz-user-select: none; /* Firefox */
-            -webkit-user-select: none; /* Chrome, Safari, and Opera */
-            -ms-user-select: none; /* Internet Explorer/Edge */
+            -moz-user-select: none;
+            -webkit-user-select: none;
+            -ms-user-select: none;
+        }
+        .footer {
+            width: 100%;
+            text-align: right;
+            margin-top: 10px; /* Distância de 10px do painel "Em pé" */
+            font-size: 0.75rem;
+            color: #6b7280;
         }
     </style>
 </head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+<body class="bg-gray-100 flex items-center justify-content-start min-h-screen p-4">
     
     <header class="fixed-header" id="main-header">
         <div class="summary-box" id="summary-box">
@@ -287,9 +300,11 @@
                     </div>
                 </div>
             </div>
+            <footer class="footer text-gray-500 text-xs">
+                <span>by macgldesign</span>
+            </footer>
         </div>
     </div>
-
     <script>
         let isAdvancedShareMode = false;
 
@@ -317,7 +332,7 @@
             ]
         };
         const storageKey = 'seatCounterState';
-
+        
         function getStandCount() {
             const input = document.getElementById('stand-count-input');
             const value = parseInt(input.value, 10);
@@ -426,7 +441,6 @@
             const salaBSeats = document.querySelectorAll('#sala-b-seats .seat.selected').length;
             const total = leftSeats + centerSeats + rightSeats + salaBSeats + getStandCount();
             
-            // Se o total for zero, desabilita o modo de compartilhamento avançado
             if (total === 0) {
                 isAdvancedShareMode = false;
                 summaryBox.classList.remove('advanced-share-mode');
@@ -529,10 +543,7 @@
             };
             
             standInput.oninput = (e) => {
-                // Remove qualquer caractere que não seja um número
                 standInput.value = standInput.value.replace(/[^0-9]/g, '');
-                
-                // Atualiza a contagem e salva o estado
                 updateCounts();
                 saveState();
             };
