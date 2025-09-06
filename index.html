@@ -532,17 +532,25 @@
             const plusButton = document.getElementById('plus-button');
             const minusButton = document.getElementById('minus-button');
             
-            plusButton.onclick = () => {
-                setStandCount(getStandCount() + 1);
+            function handleStandCount(isPlus) {
+                const value = isPlus ? getStandCount() + 1 : getStandCount() - 1;
+                setStandCount(value);
                 updateCounts();
                 saveState();
-            };
+            }
 
-            minusButton.onclick = () => {
-                setStandCount(getStandCount() - 1);
-                updateCounts();
-                saveState();
-            };
+            // Adiciona event listeners para click e touchstart para maior compatibilidade
+            plusButton.addEventListener('click', () => handleStandCount(true));
+            plusButton.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                handleStandCount(true);
+            });
+
+            minusButton.addEventListener('click', () => handleStandCount(false));
+            minusButton.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                handleStandCount(false);
+            });
             
             standInput.oninput = (e) => {
                 standInput.value = standInput.value.replace(/[^0-9]/g, '');
