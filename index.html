@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Contador de Assistência </title>
+    <title>Contador de Assistência</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
@@ -11,15 +11,27 @@
             font-family: 'Inter', sans-serif;
             background-color: #f3f4f6;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
             min-height: 100vh;
-            padding: 1rem;
+        }
+        .fixed-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            background-color: #f3f4f6;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            z-index: 100;
         }
         .container {
             display: flex;
             flex-direction: column;
-            gap: 2rem;
+            gap: 0px;
             align-items: center;
             width: 100%;
             max-width: 1000px;
@@ -33,14 +45,14 @@
         .stage {
             display: flex;
             justify-content: center;
-            gap: 2rem;
+            gap: 0px;
             flex-wrap: wrap;
         }
         .seat-section {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 10px; /* Espaçamento vertical entre os elementos da seção */
+            gap: 10px;
             background-color: #fff;
             padding: 1.5rem;
             border-radius: 1rem;
@@ -50,27 +62,27 @@
         .seat-grid {
             display: flex;
             flex-direction: column;
-            align-items: center; /* Centraliza as linhas */
-            gap: 5px; /* Espaçamento vertical entre as fileiras */
+            align-items: center;
+            gap: 5px;
         }
         .seat-row {
             display: flex;
-            gap: 5px; /* Espaçamento horizontal entre as caixas */
-            justify-content: center; /* Centraliza as caixas dentro da fileira */
+            gap: 5px;
+            justify-content: center;
         }
         .seat {
-            width: 32px;
-            height: 32px;
+            width: 36px;
+            height: 36px;
             display: flex;
             justify-content: center;
             align-items: center;
             border-radius: 0.25rem;
             cursor: pointer;
-            border: 2px solid #ef4444; /* Cor de borda para não selecionado */
+            border: 2px solid #ef4444;
             transition: all 0.2s ease-in-out;
         }
         .seat.selected {
-            background-color: #10b981; /* Cor de fundo para selecionado */
+            background-color: #10b981;
             border-color: #10b981;
         }
         .seat-count {
@@ -78,7 +90,7 @@
             font-weight: 700;
             color: #4b5563;
         }
-        .reset-button, .share-button {
+        .reset-button {
             padding: 0.5rem 1.5rem;
             background-color: #ef4444;
             color: #fff;
@@ -92,7 +104,17 @@
             background-color: #dc2626;
         }
         .share-button {
+            padding: 0.5rem 1.5rem;
             background-color: #25D366;
+            color: #fff;
+            font-weight: 600;
+            border-radius: 0.5rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.2s;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         .share-button:hover:not(:disabled) {
             background-color: #1DA851;
@@ -106,18 +128,23 @@
             padding: 0.5rem 1.5rem;
             border-radius: 0.5rem;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             font-size: 1.25rem;
             font-weight: 700;
             color: #10b981;
             border: 2px solid #10b981;
         }
+        .summary-box p {
+            white-space: nowrap;
+        }
         .summary-box span {
             font-size: 1.25rem;
         }
-        .flex-row-center {
+        .flex-row-end {
             display: flex;
-            justify-content: center;
+            justify-content: flex-end;
             width: 100%;
             gap: 1rem;
         }
@@ -177,66 +204,59 @@
             width: 60px;
             text-align: center;
         }
-        /* Estilos para centralizar o total */
-        .total-container {
-            display: flex;
-            justify-content: center;
-            width: 100%;
-            margin-bottom: 1rem;
-        }
     </style>
 </head>
 <body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+    
+    <!-- Cabeçalho Fixo -->
+    <header class="fixed-header" id="main-header">
+        <div class="summary-box">
+            <p>ASSISTÊNCIA: <span id="total-count">0</span> PESSOAS</p>
+        </div>
+        <div class="flex flex-row items-center gap-4">
+            <button id="reset-button" class="reset-button">ZERAR</button>
+            <button id="share-button" class="share-button" disabled>
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-share-2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+            </button>
+        </div>
+    </header>
 
-    <div class="container mobile-layout lg:flex-row lg:justify-center lg:items-start lg:gap-8">
+    <div class="container mobile-layout lg:flex-row lg:justify-center lg:items-start lg:gap-8" id="main-content">
         
         <div class="auditorium flex flex-col items-center">
-            
-            <!-- Resumo total no topo -->
-            <div class="total-container">
-                <div class="summary-box">
-                    <p>ASSISTÊNCIA: <span id="total-count">0</span> PESSOAS</p>
-                </div>
-            </div>
-
-            <div class="flex-row-center">
-                <button id="reset-button" class="reset-button">ZERAR</button>
-                <button id="share-button" class="share-button" disabled>COMPARTILHAR</button>
-            </div>
-
             <div class="stage mobile-layout lg:flex-row lg:items-start lg:gap-8">
 
                 <!-- Seção Esquerda -->
                 <div class="seat-section">
-                    <h2 class="text-lg font-semibold text-center">ESQUERDA</h2>
+                    <h2 class="text-xl font-semibold text-center">ESQUERDA</h2>
                     <div id="left-seats" class="seat-grid"></div>
                     <p class="seat-count text-center" id="left-count">0</p>
                 </div>
     
                 <!-- Seção Centro -->
                 <div class="seat-section">
-                    <h2 class="text-lg font-semibold text-center">CENTRO</h2>
+                    <h2 class="text-xl font-semibold text-center">CENTRO</h2>
                     <div id="center-seats" class="seat-grid"></div>
                     <p class="seat-count text-center" id="center-count">0</p>
                 </div>
     
                 <!-- Seção Direita -->
                 <div class="seat-section">
-                    <h2 class="text-lg font-semibold text-center">DIREITA</h2>
+                    <h2 class="text-xl font-semibold text-center">DIREITA</h2>
                     <div id="right-seats" class="seat-grid"></div>
                     <p class="seat-count text-center" id="right-count">0</p>
                 </div>
 
                 <!-- Seção Sala B -->
                 <div class="seat-section">
-                    <h2 class="text-lg font-semibold text-center">SALA B</h2>
+                    <h2 class="text-xl font-semibold text-center">SALA B</h2>
                     <div id="sala-b-seats" class="seat-grid"></div>
                     <p class="seat-count text-center" id="sala-b-count">0</p>
                 </div>
 
                 <!-- Nova Seção EM PÉ -->
                 <div class="stand-count-section">
-                    <h2 class="text-lg font-semibold text-center">EM PÉ</h2>
+                    <h2 class="text-xl font-semibold text-center">EM PÉ</h2>
                     <div class="stand-count-controls">
                         <button id="minus-button" class="stand-count-button">-</button>
                         <span id="stand-count-display" class="stand-count-display">0</span>
@@ -248,6 +268,22 @@
     </div>
 
     <script>
+        // Função para ajustar o espaço do conteúdo para o cabeçalho fixo
+        function adjustContentPadding() {
+            const header = document.getElementById('main-header');
+            const content = document.getElementById('main-content');
+            if (header && content) {
+                // Adiciona uma margem superior ao conteúdo igual à altura do cabeçalho, mais 15px para garantir
+                content.style.marginTop = `${header.offsetHeight + 15}px`;
+            }
+        }
+
+        // Adiciona um listener para ajustar o padding quando a janela for redimensionada
+        window.addEventListener('resize', adjustContentPadding);
+
+        // Dispara a função de ajuste no carregamento da página
+        window.addEventListener('load', adjustContentPadding);
+
         const seatLayout = {
             left: [
                 { rows: 9, cols: 4 }
@@ -448,6 +484,9 @@
                     saveState(); // Salva o estado ao alterar
                 }
             };
+
+            // Chama a função de ajuste para garantir que o layout esteja correto no início
+            adjustContentPadding();
         });
     </script>
 </body>
