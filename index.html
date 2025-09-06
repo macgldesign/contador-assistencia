@@ -44,19 +44,19 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 1rem;
+            gap: 4px;
         }
         .stage {
             display: flex;
             justify-content: center;
-            gap: 1rem;
+            gap: 4px;
             flex-wrap: wrap;
         }
         .seat-section {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 10px;
+            gap: 4px;
             background-color: #fff;
             padding: 1.5rem;
             border-radius: 1rem;
@@ -67,16 +67,16 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 5px;
+            gap: 4px;
         }
         .seat-row {
             display: flex;
-            gap: 5px;
+            gap: 4px;
             justify-content: center;
         }
         .seat {
-            width: 36px;
-            height: 36px;
+            width: 34px;
+            height: 34px;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -177,7 +177,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 10px;
+            gap: 4px;
             background-color: #fff;
             padding: 1.5rem;
             border-radius: 1rem;
@@ -187,7 +187,7 @@
         .stand-count-controls {
             display: flex;
             align-items: center;
-            gap: 1rem;
+            gap: 4px;
         }
         .stand-count-button {
             width: 40px;
@@ -233,7 +233,9 @@
         .stand-count-section h2,
         .seat-count,
         .stand-count-input,
-        .summary-box p {
+        .summary-box p,
+        #minus-button,
+        #plus-button {
             user-select: none;
             -moz-user-select: none;
             -webkit-user-select: none;
@@ -530,17 +532,25 @@
             const plusButton = document.getElementById('plus-button');
             const minusButton = document.getElementById('minus-button');
             
-            plusButton.onclick = () => {
-                setStandCount(getStandCount() + 1);
+            function handleStandCount(isPlus) {
+                const value = isPlus ? getStandCount() + 1 : getStandCount() - 1;
+                setStandCount(value);
                 updateCounts();
                 saveState();
-            };
+            }
 
-            minusButton.onclick = () => {
-                setStandCount(getStandCount() - 1);
-                updateCounts();
-                saveState();
-            };
+            // Adiciona event listeners para click e touchstart para maior compatibilidade
+            plusButton.addEventListener('click', () => handleStandCount(true));
+            plusButton.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                handleStandCount(true);
+            });
+
+            minusButton.addEventListener('click', () => handleStandCount(false));
+            minusButton.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                handleStandCount(false);
+            });
             
             standInput.oninput = (e) => {
                 standInput.value = standInput.value.replace(/[^0-9]/g, '');
