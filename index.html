@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Contador de Assistência</title>
+    <title>Contador de Assistência </title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
@@ -264,6 +264,68 @@
         };
 
         let standCount = 0;
+        const storageKey = 'seatCounterState';
+
+        // Função para salvar o estado no localStorage
+        function saveState() {
+            const seats = {
+                left: Array.from(document.querySelectorAll('#left-seats .seat.selected')).map(seat => {
+                    const row = Array.from(seat.parentNode.parentNode.children).indexOf(seat.parentNode);
+                    const col = Array.from(seat.parentNode.children).indexOf(seat);
+                    return { row, col };
+                }),
+                center: Array.from(document.querySelectorAll('#center-seats .seat.selected')).map(seat => {
+                    const row = Array.from(seat.parentNode.parentNode.children).indexOf(seat.parentNode);
+                    const col = Array.from(seat.parentNode.children).indexOf(seat);
+                    return { row, col };
+                }),
+                right: Array.from(document.querySelectorAll('#right-seats .seat.selected')).map(seat => {
+                    const row = Array.from(seat.parentNode.parentNode.children).indexOf(seat.parentNode);
+                    const col = Array.from(seat.parentNode.children).indexOf(seat);
+                    return { row, col };
+                }),
+                salaB: Array.from(document.querySelectorAll('#sala-b-seats .seat.selected')).map(seat => {
+                    const row = Array.from(seat.parentNode.parentNode.children).indexOf(seat.parentNode);
+                    const col = Array.from(seat.parentNode.children).indexOf(seat);
+                    return { row, col };
+                })
+            };
+            const state = { seats, standCount };
+            localStorage.setItem(storageKey, JSON.stringify(state));
+        }
+
+        // Função para carregar o estado do localStorage
+        function loadState() {
+            const savedState = localStorage.getItem(storageKey);
+            if (savedState) {
+                const state = JSON.parse(savedState);
+                standCount = state.standCount || 0;
+                document.getElementById('stand-count-display').textContent = standCount;
+                
+                // Limpa todas as seleções atuais antes de carregar o estado
+                document.querySelectorAll('.seat.selected').forEach(seat => {
+                    seat.classList.remove('selected');
+                    seat.innerHTML = '';
+                });
+
+                // Re-seleciona os assentos salvos
+                Object.keys(state.seats).forEach(sectionId => {
+                    const sectionElement = document.getElementById(`${sectionId}-seats`);
+                    state.seats[sectionId].forEach(({ row, col }) => {
+                        const seatRow = sectionElement.children[row];
+                        if (seatRow) {
+                            const seat = seatRow.children[col];
+                            if (seat) {
+                                seat.classList.add('selected');
+                                seat.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                </svg>`;
+                            }
+                        }
+                    });
+                });
+            }
+        }
 
         function createSeats(sectionId, layout) {
             const section = document.getElementById(sectionId);
@@ -301,6 +363,7 @@
                                 </svg>`;
             }
             updateCounts();
+            saveState(); // Salva o estado após cada alteração
         }
 
         function updateCounts() {
@@ -342,6 +405,7 @@
             standCount = 0;
             document.getElementById('stand-count-display').textContent = standCount;
             updateCounts();
+            localStorage.removeItem(storageKey); // Remove o estado salvo
         }
 
         function shareOnWhatsApp() {
@@ -363,7 +427,9 @@
             createSeats('center-seats', seatLayout.center);
             createSeats('right-seats', seatLayout.right);
             createSeats('sala-b-seats', seatLayout.salaB);
-            updateCounts(); // Contagem inicial
+            
+            loadState(); // Carrega o estado salvo ao iniciar
+            updateCounts(); // Atualiza as contagens iniciais
             document.getElementById('reset-button').onclick = resetAll;
             document.getElementById('share-button').onclick = shareOnWhatsApp;
             
@@ -371,6 +437,7 @@
                 standCount++;
                 document.getElementById('stand-count-display').textContent = standCount;
                 updateCounts();
+                saveState(); // Salva o estado ao alterar
             };
 
             document.getElementById('minus-button').onclick = () => {
@@ -378,6 +445,7 @@
                     standCount--;
                     document.getElementById('stand-count-display').textContent = standCount;
                     updateCounts();
+                    saveState(); // Salva o estado ao alterar
                 }
             };
         });
