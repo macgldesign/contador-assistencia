@@ -2,9 +2,8 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Contador de Assistência</title>
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor'%3E%3Cpath d='M19 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2zM9.5 17L5 12.5l1.5-1.5L9.5 14l6-6L17 9.5l-7.5 7.5z'/%3E%3C/svg%3E">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
@@ -14,7 +13,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            min-height: 10vh;
+            min-height: 100vh;
         }
         .fixed-header {
             position: fixed;
@@ -28,9 +27,6 @@
             background-color: #f3f4f6;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             z-index: 100;
-            will-change: transform;
-            -webkit-transform: translate3d(0, 0, 0);
-            transform: translate3d(0, 0, 0);
         }
         .container {
             display: flex;
@@ -44,19 +40,19 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 4px;
+            gap: 1rem;
         }
         .stage {
             display: flex;
             justify-content: center;
-            gap: 4px;
+            gap: 1rem;
             flex-wrap: wrap;
         }
         .seat-section {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 4px;
+            gap: 10px;
             background-color: #fff;
             padding: 1.5rem;
             border-radius: 1rem;
@@ -67,16 +63,16 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 4px;
+            gap: 5px;
         }
         .seat-row {
             display: flex;
-            gap: 4px;
+            gap: 5px;
             justify-content: center;
         }
         .seat {
-            width: 34px;
-            height: 34px;
+            width: 36px;
+            height: 36px;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -104,12 +100,8 @@
             transition: background-color 0.2s;
             cursor: pointer;
         }
-        .reset-button:hover:not(:disabled) {
+        .reset-button:hover {
             background-color: #dc2626;
-        }
-        .reset-button:disabled {
-            background-color: #ccc;
-            cursor: not-allowed;
         }
         .share-button {
             padding: 0.5rem 1.5rem;
@@ -143,16 +135,6 @@
             font-weight: 700;
             color: #10b981;
             border: 1px solid #10b981;
-            transition: color 0.2s, border-color 0.2s;
-        }
-        .summary-box.advanced-share-mode {
-            background-color: #fff;
-            border: 2px solid #ef4444;
-            color: #ef4444;
-        }
-        .summary-box.zero-count {
-            color: #9ca3af;
-            border-color: #d1d5db;
         }
         .summary-box p {
             white-space: nowrap;
@@ -177,7 +159,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 4px;
+            gap: 10px;
             background-color: #fff;
             padding: 1.5rem;
             border-radius: 1rem;
@@ -187,13 +169,13 @@
         .stand-count-controls {
             display: flex;
             align-items: center;
-            gap: 4px;
+            gap: 1rem;
         }
         .stand-count-button {
             width: 40px;
             height: 40px;
             color: #fff;
-            font-size: 1.25rem;
+            font-size: 1.5rem;
             font-weight: 700;
             border-radius: 0.5rem;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -215,45 +197,18 @@
         #plus-button:hover {
             background-color: #0c9c6f;
         }
-        .stand-count-input {
-            font-size: 1.75rem;
+        .stand-count-display {
+            font-size: 2rem;
             font-weight: 700;
             width: 60px;
             text-align: center;
-            background: transparent;
-            border: none;
-            outline: none;
-            -moz-appearance: textfield;
-        }
-        .error-message {
-            color: #ef4444;
-            font-weight: 600;
-        }
-        .seat-section h2,
-        .stand-count-section h2,
-        .seat-count,
-        .stand-count-input,
-        .summary-box p,
-        #minus-button,
-        #plus-button {
-            user-select: none;
-            -moz-user-select: none;
-            -webkit-user-select: none;
-            -ms-user-select: none;
-        }
-        .footer {
-            width: 100%;
-            text-align: center;
-            margin-top: 10px;
-            font-size: 0.75rem;
-            color: #6b7280;
         }
     </style>
 </head>
-<body class="bg-gray-100 flex items-center justify-content-start min-h-screen p-4">
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
     
     <header class="fixed-header" id="main-header">
-        <div class="summary-box" id="summary-box">
+        <div class="summary-box">
             <p>ASSISTÊNCIA: <span id="total-count">0</span> PESSOAS</p>
         </div>
         <div class="flex flex-row items-center gap-4 mt-2">
@@ -276,7 +231,7 @@
                 </div>
     
                 <div class="seat-section">
-                    <h2 class="text-xl font-semibold text-center">CENTRAL</h2>
+                    <h2 class="text-xl font-semibold text-center">CENTRO</h2>
                     <div id="center-seats" class="seat-grid"></div>
                     <p class="seat-count text-center" id="center-count">0</p>
                 </div>
@@ -297,19 +252,15 @@
                     <h2 class="text-xl font-semibold text-center">EM PÉ</h2>
                     <div class="stand-count-controls">
                         <button id="minus-button" class="stand-count-button">-</button>
-                        <input type="text" id="stand-count-input" class="stand-count-input" value="0">
+                        <span id="stand-count-display" class="stand-count-display">0</span>
                         <button id="plus-button" class="stand-count-button">+</button>
                     </div>
                 </div>
             </div>
-            <footer class="footer text-gray-500 text-xs">
-                <span>by macgldesign</span>
-            </footer>
         </div>
     </div>
-    <script>
-        let isAdvancedShareMode = false;
 
+    <script>
         function adjustContentPadding() {
             const header = document.getElementById('main-header');
             const content = document.getElementById('main-content');
@@ -333,19 +284,8 @@
                 { rows: 5, cols: 5 }
             ]
         };
+        let standCount = 0;
         const storageKey = 'seatCounterState';
-        
-        function getStandCount() {
-            const input = document.getElementById('stand-count-input');
-            const value = parseInt(input.value, 10);
-            return Math.max(0, isNaN(value) ? 0 : value);
-        }
-
-        function setStandCount(value) {
-            const input = document.getElementById('stand-count-input');
-            input.value = Math.max(0, value);
-        }
-
         function saveState() {
             const seats = {
                 left: Array.from(document.querySelectorAll('#left-seats .seat.selected')).map(seat => {
@@ -369,15 +309,15 @@
                     return { row, col };
                 })
             };
-            const state = { seats, standCount: getStandCount() };
+            const state = { seats, standCount };
             localStorage.setItem(storageKey, JSON.stringify(state));
         }
-        
         function loadState() {
             const savedState = localStorage.getItem(storageKey);
             if (savedState) {
                 const state = JSON.parse(savedState);
-                setStandCount(state.standCount || 0);
+                standCount = state.standCount || 0;
+                document.getElementById('stand-count-display').textContent = standCount;
                 document.querySelectorAll('.seat.selected').forEach(seat => {
                     seat.classList.remove('selected');
                     seat.innerHTML = '';
@@ -435,19 +375,11 @@
             saveState();
         }
         function updateCounts() {
-            const summaryBox = document.querySelector('.summary-box');
-            const resetButton = document.getElementById('reset-button');
             const leftSeats = document.querySelectorAll('#left-seats .seat.selected').length;
             const centerSeats = document.querySelectorAll('#center-seats .seat.selected').length;
             const rightSeats = document.querySelectorAll('#right-seats .seat.selected').length;
             const salaBSeats = document.querySelectorAll('#sala-b-seats .seat.selected').length;
-            const total = leftSeats + centerSeats + rightSeats + salaBSeats + getStandCount();
-            
-            if (total === 0) {
-                isAdvancedShareMode = false;
-                summaryBox.classList.remove('advanced-share-mode');
-            }
-            
+            const total = leftSeats + centerSeats + rightSeats + salaBSeats + standCount;
             let pessoasText = "";
             if (total === 1) {
                 pessoasText = "PESSOA";
@@ -462,12 +394,8 @@
             const shareButton = document.getElementById('share-button');
             if (total === 0) {
                 shareButton.disabled = true;
-                resetButton.disabled = true;
-                summaryBox.classList.add('zero-count');
             } else {
                 shareButton.disabled = false;
-                resetButton.disabled = false;
-                summaryBox.classList.remove('zero-count');
             }
         }
         function resetAll() {
@@ -475,7 +403,8 @@
                 seat.classList.remove('selected');
                 seat.innerHTML = '';
             });
-            setStandCount(0);
+            standCount = 0;
+            document.getElementById('stand-count-display').textContent = standCount;
             updateCounts();
             localStorage.removeItem(storageKey);
         }
@@ -485,82 +414,35 @@
             const month = String(today.getMonth() + 1).padStart(2, '0');
             const year = today.getFullYear();
             const formattedDate = `${day}/${month}/${year}`;
-            
-            let message;
-            if (isAdvancedShareMode) {
-                const leftSeats = document.querySelectorAll('#left-seats .seat.selected').length;
-                const centerSeats = document.querySelectorAll('#center-seats .seat.selected').length;
-                const rightSeats = document.querySelectorAll('#right-seats .seat.selected').length;
-                const salaBSeats = document.querySelectorAll('#sala-b-seats .seat.selected').length;
-                const total = leftSeats + centerSeats + rightSeats + salaBSeats + getStandCount();
-                
-                message = `Assistência presencial ${formattedDate}:\nEsquerda: ${leftSeats}\nCentral: ${centerSeats}\nDireita: ${rightSeats}\nSala B: ${salaBSeats}\nEm pé: ${getStandCount()}\n*Total: ${total} pessoas*`;
-            } else {
-                const total = parseInt(document.querySelector('#total-count').textContent, 10);
-                const pessoasText = total === 1 ? "pessoa" : "pessoas";
-                message = `${formattedDate}\nAssistência presencial: *${total} ${pessoasText}*`;
-            }
-
+            const total = parseInt(document.querySelector('#total-count').textContent, 10);
+            const pessoasText = total === 1 ? "pessoa" : "pessoas";
+            const message = `${formattedDate}\nAssistência presencial: ${total} ${pessoasText}`;
             const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
             window.open(whatsappUrl, '_blank');
         }
-
         document.addEventListener('DOMContentLoaded', () => {
             createSeats('left-seats', seatLayout.left);
             createSeats('center-seats', seatLayout.center);
             createSeats('right-seats', seatLayout.right);
             createSeats('sala-b-seats', seatLayout.salaB);
-            
-            // Carrega o estado antes de qualquer outra operação de atualização
-            loadState(); 
+            loadState();
             updateCounts();
-            
             document.getElementById('reset-button').onclick = resetAll;
             document.getElementById('share-button').onclick = shareOnWhatsApp;
-
-            document.getElementById('summary-box').ondblclick = () => {
-                const total = parseInt(document.querySelector('#total-count').textContent, 10);
-                if (total > 0) {
-                    isAdvancedShareMode = !isAdvancedShareMode;
-                    const summaryBox = document.getElementById('summary-box');
-                    if (isAdvancedShareMode) {
-                        summaryBox.classList.add('advanced-share-mode');
-                    } else {
-                        summaryBox.classList.remove('advanced-share-mode');
-                    }
+            document.getElementById('plus-button').onclick = () => {
+                standCount++;
+                document.getElementById('stand-count-display').textContent = standCount;
+                updateCounts();
+                saveState();
+            };
+            document.getElementById('minus-button').onclick = () => {
+                if (standCount > 0) {
+                    standCount--;
+                    document.getElementById('stand-count-display').textContent = standCount;
+                    updateCounts();
+                    saveState();
                 }
             };
-
-            const standInput = document.getElementById('stand-count-input');
-            const plusButton = document.getElementById('plus-button');
-            const minusButton = document.getElementById('minus-button');
-            
-            function handleStandCount(isPlus) {
-                const value = isPlus ? getStandCount() + 1 : getStandCount() - 1;
-                setStandCount(value);
-                updateCounts();
-                saveState();
-            }
-
-            // Adiciona event listeners para click e touchstart para maior compatibilidade
-            plusButton.addEventListener('click', () => handleStandCount(true));
-            plusButton.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                handleStandCount(true);
-            });
-
-            minusButton.addEventListener('click', () => handleStandCount(false));
-            minusButton.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                handleStandCount(false);
-            });
-            
-            standInput.oninput = (e) => {
-                standInput.value = standInput.value.replace(/[^0-9]/g, '');
-                updateCounts();
-                saveState();
-            };
-            
             adjustContentPadding();
         });
     </script>
