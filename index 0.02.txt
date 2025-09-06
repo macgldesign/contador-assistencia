@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contador de Assistência</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .fixed-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            align-items: center;
+            width: 100%;
+            max-width: 1000px;
+        }
+        .auditorium {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+        .stage {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        .seat-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            background-color: #fff;
+            padding: 1.5rem;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: 2px solid #e5e7eb;
+        }
+        .seat-grid {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+        .seat-row {
+            display: flex;
+            gap: 5px;
+            justify-content: center;
+        }
+        .seat {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            border: 2px solid #ef4444;
+            transition: all 0.2s ease-in-out;
+        }
+        .seat.selected {
+            background-color: #10b981;
+            border-color: #10b981;
+        }
+        .seat-count {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #4b5563;
+        }
+        .reset-button {
+            padding: 0.5rem 1.5rem;
+            background-color: #ef4444;
+            color: #fff;
+            font-weight: 600;
+            border-radius: 0.5rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.2s;
+            cursor: pointer;
+        }
+        .reset-button:hover {
+            background-color: #dc2626;
+        }
+        .share-button {
+            padding: 0.5rem 1.5rem;
+            background-color: #25D366;
+            color: #fff;
+            font-weight: 600;
+            border-radius: 0.5rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.2s;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .share-button:hover:not(:disabled) {
+            background-color: #1DA851;
+        }
+        .share-button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .summary-box {
+            background-color: #fff;
+            padding: 0.5rem 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #10b981;
+            border: 1px solid #10b981;
+        }
+        .summary-box p {
+            white-space: nowrap;
+        }
+        .summary-box span {
+            font-size: 1.25rem;
+        }
+        .flex-row-end {
+            display: flex;
+            justify-content: flex-end;
+            width: 100%;
+            gap: 1rem;
+        }
+        .mobile-layout {
+            flex-direction: column;
+            align-items: center;
+        }
+        .mobile-layout .seat-section {
+            width: 100%;
+        }
+        .stand-count-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            background-color: #fff;
+            padding: 1.5rem;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: 2px solid #e5e7eb;
+        }
+        .stand-count-controls {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .stand-count-button {
+            width: 40px;
+            height: 40px;
+            color: #fff;
+            font-size: 1.5rem;
+            font-weight: 700;
+            border-radius: 0.5rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.2s;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        #minus-button {
+            background-color: #ef4444;
+        }
+        #minus-button:hover {
+            background-color: #dc2626;
+        }
+        #plus-button {
+            background-color: #10b981;
+        }
+        #plus-button:hover {
+            background-color: #0c9c6f;
+        }
+        .stand-count-display {
+            font-size: 2rem;
+            font-weight: 700;
+            width: 60px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+    
+    <header class="fixed-header" id="main-header">
+        <div class="summary-box">
+            <p>ASSISTÊNCIA: <span id="total-count">0</span> PESSOAS</p>
+        </div>
+        <div class="flex flex-row items-center gap-4 mt-2">
+            <button id="reset-button" class="reset-button">ZERAR</button>
+            <button id="share-button" class="share-button" disabled>
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-share-2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+            </button>
+        </div>
+    </header>
+
+    <div class="container mobile-layout lg:flex-row lg:justify-center lg:items-start lg:gap-8" id="main-content">
+        
+        <div class="auditorium flex flex-col items-center">
+            <div class="stage mobile-layout lg:flex-row lg:items-start lg:gap-8">
+
+                <div class="seat-section">
+                    <h2 class="text-xl font-semibold text-center">ESQUERDA</h2>
+                    <div id="left-seats" class="seat-grid"></div>
+                    <p class="seat-count text-center" id="left-count">0</p>
+                </div>
+    
+                <div class="seat-section">
+                    <h2 class="text-xl font-semibold text-center">CENTRO</h2>
+                    <div id="center-seats" class="seat-grid"></div>
+                    <p class="seat-count text-center" id="center-count">0</p>
+                </div>
+    
+                <div class="seat-section">
+                    <h2 class="text-xl font-semibold text-center">DIREITA</h2>
+                    <div id="right-seats" class="seat-grid"></div>
+                    <p class="seat-count text-center" id="right-count">0</p>
+                </div>
+
+                <div class="seat-section">
+                    <h2 class="text-xl font-semibold text-center">SALA B</h2>
+                    <div id="sala-b-seats" class="seat-grid"></div>
+                    <p class="seat-count text-center" id="sala-b-count">0</p>
+                </div>
+
+                <div class="stand-count-section">
+                    <h2 class="text-xl font-semibold text-center">EM PÉ</h2>
+                    <div class="stand-count-controls">
+                        <button id="minus-button" class="stand-count-button">-</button>
+                        <span id="stand-count-display" class="stand-count-display">0</span>
+                        <button id="plus-button" class="stand-count-button">+</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function adjustContentPadding() {
+            const header = document.getElementById('main-header');
+            const content = document.getElementById('main-content');
+            if (header && content) {
+                content.style.marginTop = `${header.offsetHeight + 10}px`;
+            }
+        }
+        window.addEventListener('resize', adjustContentPadding);
+        window.addEventListener('load', adjustContentPadding);
+        const seatLayout = {
+            left: [
+                { rows: 9, cols: 4 }
+            ],
+            center: [
+                { rows: 9, cols: 8 }
+            ],
+            right: [
+                { rows: 9, cols: 4 }
+            ],
+            salaB: [
+                { rows: 5, cols: 5 }
+            ]
+        };
+        let standCount = 0;
+        const storageKey = 'seatCounterState';
+        function saveState() {
+            const seats = {
+                left: Array.from(document.querySelectorAll('#left-seats .seat.selected')).map(seat => {
+                    const row = Array.from(seat.parentNode.parentNode.children).indexOf(seat.parentNode);
+                    const col = Array.from(seat.parentNode.children).indexOf(seat);
+                    return { row, col };
+                }),
+                center: Array.from(document.querySelectorAll('#center-seats .seat.selected')).map(seat => {
+                    const row = Array.from(seat.parentNode.parentNode.children).indexOf(seat.parentNode);
+                    const col = Array.from(seat.parentNode.children).indexOf(seat);
+                    return { row, col };
+                }),
+                right: Array.from(document.querySelectorAll('#right-seats .seat.selected')).map(seat => {
+                    const row = Array.from(seat.parentNode.parentNode.children).indexOf(seat.parentNode);
+                    const col = Array.from(seat.parentNode.children).indexOf(seat);
+                    return { row, col };
+                }),
+                salaB: Array.from(document.querySelectorAll('#sala-b-seats .seat.selected')).map(seat => {
+                    const row = Array.from(seat.parentNode.parentNode.children).indexOf(seat.parentNode);
+                    const col = Array.from(seat.parentNode.children).indexOf(seat);
+                    return { row, col };
+                })
+            };
+            const state = { seats, standCount };
+            localStorage.setItem(storageKey, JSON.stringify(state));
+        }
+        function loadState() {
+            const savedState = localStorage.getItem(storageKey);
+            if (savedState) {
+                const state = JSON.parse(savedState);
+                standCount = state.standCount || 0;
+                document.getElementById('stand-count-display').textContent = standCount;
+                document.querySelectorAll('.seat.selected').forEach(seat => {
+                    seat.classList.remove('selected');
+                    seat.innerHTML = '';
+                });
+                Object.keys(state.seats).forEach(sectionId => {
+                    const sectionElement = document.getElementById(`${sectionId}-seats`);
+                    state.seats[sectionId].forEach(({ row, col }) => {
+                        const seatRow = sectionElement.children[row];
+                        if (seatRow) {
+                            const seat = seatRow.children[col];
+                            if (seat) {
+                                seat.classList.add('selected');
+                                seat.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                </svg>`;
+                            }
+                        }
+                    });
+                });
+            }
+        }
+        function createSeats(sectionId, layout) {
+            const section = document.getElementById(sectionId);
+            layout.forEach(group => {
+                for (let i = 0; i < group.rows; i++) {
+                    const row = document.createElement('div');
+                    row.className = 'seat-row';
+                    for (let j = 0; j < group.cols; j++) {
+                        const seat = document.createElement('div');
+                        seat.className = 'seat';
+                        seat.onclick = toggleSeat;
+                        row.appendChild(seat);
+                    }
+                    section.appendChild(row);
+                }
+            });
+        }
+        function toggleSeat(event) {
+            const seat = event.target;
+            let seatElement = seat;
+            if (seat.tagName === 'path' || seat.tagName === 'svg') {
+                seatElement = seat.closest('.seat');
+            }
+            const isSelected = seatElement.classList.contains('selected');
+            if (isSelected) {
+                seatElement.classList.remove('selected');
+                seatElement.innerHTML = '';
+            } else {
+                seatElement.classList.add('selected');
+                seatElement.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                </svg>`;
+            }
+            updateCounts();
+            saveState();
+        }
+        function updateCounts() {
+            const leftSeats = document.querySelectorAll('#left-seats .seat.selected').length;
+            const centerSeats = document.querySelectorAll('#center-seats .seat.selected').length;
+            const rightSeats = document.querySelectorAll('#right-seats .seat.selected').length;
+            const salaBSeats = document.querySelectorAll('#sala-b-seats .seat.selected').length;
+            const total = leftSeats + centerSeats + rightSeats + salaBSeats + standCount;
+            let pessoasText = "";
+            if (total === 1) {
+                pessoasText = "PESSOA";
+            } else if (total > 1) {
+                pessoasText = "PESSOAS";
+            }
+            document.querySelector('.summary-box p').innerHTML = `ASSISTÊNCIA: <span id="total-count">${total}</span> ${pessoasText}`;
+            document.getElementById('left-count').textContent = leftSeats;
+            document.getElementById('center-count').textContent = centerSeats;
+            document.getElementById('right-count').textContent = rightSeats;
+            document.getElementById('sala-b-count').textContent = salaBSeats;
+            const shareButton = document.getElementById('share-button');
+            if (total === 0) {
+                shareButton.disabled = true;
+            } else {
+                shareButton.disabled = false;
+            }
+        }
+        function resetAll() {
+            document.querySelectorAll('.seat.selected').forEach(seat => {
+                seat.classList.remove('selected');
+                seat.innerHTML = '';
+            });
+            standCount = 0;
+            document.getElementById('stand-count-display').textContent = standCount;
+            updateCounts();
+            localStorage.removeItem(storageKey);
+        }
+        function shareOnWhatsApp() {
+            const today = new Date();
+            const day = String(today.getDate()).padStart(2, '0');
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const year = today.getFullYear();
+            const formattedDate = `${day}/${month}/${year}`;
+            const total = parseInt(document.querySelector('#total-count').textContent, 10);
+            const pessoasText = total === 1 ? "pessoa" : "pessoas";
+            const message = `${formattedDate}\nAssistência presencial: ${total} ${pessoasText}`;
+            const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
+            window.open(whatsappUrl, '_blank');
+        }
+        document.addEventListener('DOMContentLoaded', () => {
+            createSeats('left-seats', seatLayout.left);
+            createSeats('center-seats', seatLayout.center);
+            createSeats('right-seats', seatLayout.right);
+            createSeats('sala-b-seats', seatLayout.salaB);
+            loadState();
+            updateCounts();
+            document.getElementById('reset-button').onclick = resetAll;
+            document.getElementById('share-button').onclick = shareOnWhatsApp;
+            document.getElementById('plus-button').onclick = () => {
+                standCount++;
+                document.getElementById('stand-count-display').textContent = standCount;
+                updateCounts();
+                saveState();
+            };
+            document.getElementById('minus-button').onclick = () => {
+                if (standCount > 0) {
+                    standCount--;
+                    document.getElementById('stand-count-display').textContent = standCount;
+                    updateCounts();
+                    saveState();
+                }
+            };
+            adjustContentPadding();
+        });
+    </script>
+</body>
+</html>
