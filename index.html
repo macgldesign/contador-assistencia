@@ -63,6 +63,7 @@
             border-radius: 1rem;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             border: 2px solid #e5e7eb;
+            width: 100%; /* Garante que o painel ocupe a largura total em telas pequenas */
         }
         .seat-grid {
             display: flex;
@@ -269,6 +270,7 @@
             border-radius: 1rem;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             border: 2px solid #e5e7eb;
+            width: 100%; /* Garante que o painel ocupe a largura total em telas pequenas */
         }
         .stand-count-controls {
             display: flex;
@@ -669,7 +671,7 @@
                 resetButton.disabled = false;
                 summaryBox.classList.remove('zero-count');
             }
-            occupyButton.disabled = totalOccupiedSeats === totalCapacity;
+            occupyButton.disabled = totalOccupiedSeats === totalCapacity && appState.standCount === 0;
             
             // Adiciona ou remove a classe advanced-share-mode
             if (isAdvancedShareMode) {
@@ -809,7 +811,7 @@
             localStorage.removeItem(storageKey);
         }
 
-        // Ocupa todos os assentos disponíveis.
+        // Ocupa todos os assentos disponíveis e zera o contador de "em pé".
         function occupyAllSeats() {
             Object.keys(panelConfig).forEach(sectionId => {
                 const { rows, cols } = panelConfig[sectionId];
@@ -820,6 +822,7 @@
                     }
                 }
             });
+            appState.standCount = 0;
             updateUI();
             saveState();
         }
