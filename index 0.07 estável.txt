@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <title>Contador de Assistência</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor'%3E%3Cpath d='M19 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2zM9.5 17L5 12.5l1.5-1.5L9.5 14l6-6L17 9.5l-7.5 7.5z'/%3E%3C/svg%3E">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .fixed-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+            will-change: transform;
+            -webkit-transform: translate3d(0, 0, 0);
+            transform: translate3d(0, 0, 0);
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            align-items: center;
+            width: 100%;
+            max-width: 1000px;
+        }
+        .auditorium {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+        .stage {
+            display: flex;
+            justify-content: center;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+        .seat-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            background-color: #fff;
+            padding: 1.5rem;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: 2px solid #e5e7eb;
+        }
+        .seat-grid {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+        .seat-row {
+            display: flex;
+            gap: 4px;
+            justify-content: center;
+        }
+        .seat {
+            width: 34px;
+            height: 34px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            border: 2px solid #ef4444;
+            transition: all 0.2s ease-in-out;
+        }
+        .seat.selected {
+            background-color: #10b981;
+            border-color: #10b981;
+        }
+        .seat-count-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+        .seat-count {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #4b5563;
+            flex-grow: 1;
+            text-align: center;
+        }
+        .settings-button {
+            background-color: #fff;
+            border: 2px solid #9ca3af;
+            border-radius: 0.5rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            padding: 0 0.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #9ca3af;
+            font-size: 0.875rem;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .settings-button:hover {
+            background-color: #d1d5db;
+        }
+        .settings-button-spacer {
+            width: 1.75rem;
+            height: 1.75rem;
+        }
+        .reset-button {
+            padding: 0.5rem 1.5rem;
+            background-color: #ef4444;
+            color: #fff;
+            font-weight: 600;
+            border-radius: 0.5rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.2s;
+            cursor: pointer;
+        }
+        .reset-button:hover:not(:disabled) {
+            background-color: #dc2626;
+        }
+        .reset-button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .share-button {
+            padding: 0.5rem 1.5rem;
+            background-color: #25D366;
+            color: #fff;
+            font-weight: 600;
+            border-radius: 0.5rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.2s;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .share-button:hover:not(:disabled) {
+            background-color: #1DA851;
+        }
+        .share-button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .summary-box {
+            background-color: #fff;
+            padding: 0.5rem 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #10b981;
+            border: 1px solid #10b981;
+            transition: color 0.2s, border-color 0.2s;
+        }
+        .summary-box.advanced-share-mode {
+            background-color: #fff;
+            border: 2px solid #ef4444;
+            color: #ef4444;
+        }
+        .summary-box.zero-count {
+            color: #9ca3af;
+            border-color: #d1d5db;
+        }
+        .summary-box p {
+            white-space: nowrap;
+        }
+        .summary-box span {
+            font-size: 1.25rem;
+        }
+        .flex-row-end {
+            display: flex;
+            justify-content: flex-end;
+            width: 100%;
+            gap: 1rem;
+        }
+        .mobile-layout {
+            flex-direction: column;
+            align-items: center;
+        }
+        .mobile-layout .seat-section {
+            width: 100%;
+        }
+        .stand-count-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            background-color: #fff;
+            padding: 0.75rem; /* Alterado de 1rem */
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: 2px solid #e5e7eb;
+        }
+        .stand-count-controls {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .stand-count-button {
+            width: 36px;
+            height: 36px;
+            color: #fff;
+            font-size: 1.25rem;
+            font-weight: 700;
+            border-radius: 0.5rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.2s;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        #minus-button {
+            background-color: #ef4444;
+        }
+        #minus-button:hover {
+            background-color: #dc2626;
+        }
+        #plus-button {
+            background-color: #10b981;
+        }
+        #plus-button:hover {
+            background-color: #0c9c6f;
+        }
+        .stand-count-input {
+            font-size: 1.75rem;
+            font-weight: 700;
+            width: 60px;
+            text-align: center;
+            background: transparent;
+            border: none;
+            outline: none;
+            -moz-appearance: textfield;
+        }
+        .error-message {
+            color: #ef4444;
+            font-weight: 600;
+        }
+        .seat-section h2,
+        .stand-count-section h2,
+        .seat-count,
+        .stand-count-input,
+        .summary-box p,
+        #minus-button,
+        #plus-button {
+            user-select: none;
+            -moz-user-select: none;
+            -webkit-user-select: none;
+            -ms-user-select: none;
+        }
+        .footer {
+            width: 100%;
+            text-align: center;
+            margin-top: 10px;
+            font-size: 0.75rem;
+            color: #6b7280;
+        }
+        .settings-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 200;
+            visibility: hidden;
+            opacity: 0;
+            transition: visibility 0.3s, opacity 0.3s;
+        }
+        .settings-modal.show {
+            visibility: visible;
+            opacity: 1;
+        }
+        .settings-content {
+            background-color: #fff;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            width: 90%;
+            max-width: 400px;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            font-size: 1.25rem;
+        }
+        .modal-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .modal-control-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .modal-control-button {
+            padding: 0.25rem 0.5rem;
+            background-color: #d1d5db;
+            color: #374151;
+            font-weight: 600;
+            border-radius: 0.25rem;
+            transition: background-color 0.2s;
+            cursor: pointer;
+        }
+        .modal-control-button:hover {
+            background-color: #9ca3af;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-content-start min-h-screen p-4">
+    
+    <header class="fixed-header" id="main-header">
+        <div class="summary-box" id="summary-box">
+            <p>ASSISTÊNCIA: <span id="total-count">0</span> PESSOAS</p>
+        </div>
+        <div class="flex flex-row items-center gap-4 mt-2">
+            <button id="reset-button" class="reset-button">ZERAR</button>
+            <button id="share-button" class="share-button" disabled>
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-share-2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+            </button>
+        </div>
+    </header>
+
+    <div class="container mobile-layout lg:flex-row lg:justify-center lg:items-start lg:gap-8" id="main-content">
+        
+        <div class="auditorium flex flex-col items-center">
+            <div class="stage mobile-layout lg:flex-row lg:items-start lg:gap-8">
+
+                <div class="seat-section">
+                    <h2 class="text-xl font-semibold text-center">ESQUERDA</h2>
+                    <div id="left-seats" class="seat-grid"></div>
+                    <div class="seat-count-container">
+                        <!-- Espaçador invisível para centralizar o contador -->
+                        <div class="settings-button-spacer"></div>
+                        <p class="seat-count" id="left-count">0</p>
+                        <button class="settings-button" data-section="left">c</button>
+                    </div>
+                </div>
+    
+                <div class="seat-section">
+                    <h2 class="text-xl font-semibold text-center">CENTRAL</h2>
+                    <div id="center-seats" class="seat-grid"></div>
+                    <div class="seat-count-container">
+                        <!-- Espaçador invisível para centralizar o contador -->
+                        <div class="settings-button-spacer"></div>
+                        <p class="seat-count" id="center-count">0</p>
+                        <button class="settings-button" data-section="center">c</button>
+                    </div>
+                </div>
+    
+                <div class="seat-section">
+                    <h2 class="text-xl font-semibold text-center">DIREITA</h2>
+                    <div id="right-seats" class="seat-grid"></div>
+                    <div class="seat-count-container">
+                        <!-- Espaçador invisível para centralizar o contador -->
+                        <div class="settings-button-spacer"></div>
+                        <p class="seat-count" id="right-count">0</p>
+                        <button class="settings-button" data-section="right">c</button>
+                    </div>
+                </div>
+                
+                <div class="seat-section">
+                    <h2 class="text-xl font-semibold text-center">SALA B</h2>
+                    <div id="sala-b-seats" class="seat-grid"></div>
+                    <div class="seat-count-container">
+                        <!-- Espaçador invisível para centralizar o contador -->
+                        <div class="settings-button-spacer"></div>
+                        <p class="seat-count" id="sala-b-count">0</p>
+                        <button class="settings-button" data-section="salaB">c</button>
+                    </div>
+                </div>
+
+                <div class="stand-count-section">
+                    <h2 class="text-xl font-semibold text-center">EM PÉ</h2>
+                    <div class="stand-count-controls">
+                        <button id="minus-button" class="stand-count-button">-</button>
+                        <input type="text" id="stand-count-input" class="stand-count-input" value="0">
+                        <button id="plus-button" class="stand-count-button">+</button>
+                    </div>
+                </div>
+            </div>
+            <footer class="footer text-gray-500 text-xs">
+                <span>by macgldesign</span>
+            </footer>
+        </div>
+    </div>
+
+    <!-- Modal de Configuração -->
+    <div id="settings-modal" class="settings-modal">
+        <div class="settings-content">
+            <div class="modal-header">
+                <h3 id="modal-title">Configurações</h3>
+                <button id="close-modal-button" class="text-gray-400 hover:text-gray-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-controls">
+                <div class="modal-control-row">
+                    <span>Linhas:</span>
+                    <div class="flex gap-2">
+                        <button id="remove-row-button" class="modal-control-button">-</button>
+                        <span id="rows-count">9</span>
+                        <button id="add-row-button" class="modal-control-button">+</button>
+                    </div>
+                </div>
+                <div class="modal-control-row">
+                    <span>Colunas:</span>
+                    <div class="flex gap-2">
+                        <button id="remove-col-button" class="modal-control-button">-</button>
+                        <span id="cols-count">4</span>
+                        <button id="add-col-button" class="modal-control-button">+</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. Definições de Estado e Layout ---
+        
+        // Define o layout de assentos para cada seção do auditório.
+        const seatLayout = {
+            left: { rows: 9, cols: 4 },
+            center: { rows: 9, cols: 8 },
+            right: { rows: 9, cols: 4 },
+            salaB: { rows: 5, cols: 5 }
+        };
+        const storageKey = 'seatCounterState';
+        const layoutStorageKey = 'seatLayoutState';
+        let isAdvancedShareMode = false;
+        
+        // Objeto de estado central para gerenciar todos os dados da aplicação.
+        let appState = {
+            seats: {
+                left: [],
+                center: [],
+                right: [],
+                salaB: []
+            },
+            standCount: 0
+        };
+
+        let currentSectionId = null;
+
+        // --- 2. Funções de Gerenciamento da UI ---
+
+        // Ajusta o preenchimento do conteúdo para evitar que o cabeçalho flutuante o cubra.
+        function adjustContentPadding() {
+            const header = document.getElementById('main-header');
+            const content = document.getElementById('main-content');
+            if (header && content) {
+                // Margem alterada para 0px
+                content.style.marginTop = `${header.offsetHeight + 0}px`;
+            }
+        }
+        
+        // Atualiza a interface do usuário com base nos dados do appState.
+        function updateUI() {
+            // Limpa a seleção visual de todos os assentos.
+            document.querySelectorAll('.seat.selected').forEach(seat => {
+                seat.classList.remove('selected');
+                seat.innerHTML = '';
+            });
+
+            // Re-seleciona os assentos com base no estado carregado.
+            Object.keys(appState.seats).forEach(sectionId => {
+                const sectionElement = document.getElementById(`${sectionId.toLowerCase().replace('b', '-b')}-seats`);
+                
+                if (sectionElement) {
+                    appState.seats[sectionId].forEach(({ row, col }) => {
+                        const seatRow = sectionElement.children[row];
+                        if (seatRow) {
+                            const seat = seatRow.children[col];
+                            if (seat) {
+                                seat.classList.add('selected');
+                                seat.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                </svg>`;
+                            }
+                        }
+                    });
+                }
+            });
+
+            // Atualiza os contadores na UI.
+            document.getElementById('stand-count-input').value = appState.standCount;
+            const leftSeats = appState.seats.left.length;
+            const centerSeats = appState.seats.center.length;
+            const rightSeats = appState.seats.right.length;
+            const salaBSeats = appState.seats.salaB.length;
+            const total = leftSeats + centerSeats + rightSeats + salaBSeats + appState.standCount;
+
+            document.getElementById('total-count').textContent = total;
+            document.getElementById('left-count').textContent = leftSeats;
+            document.getElementById('center-count').textContent = centerSeats;
+            document.getElementById('right-count').textContent = rightSeats;
+            document.getElementById('sala-b-count').textContent = salaBSeats;
+
+            const pessoasText = total === 1 ? "PESSOA" : "PESSOAS";
+            document.querySelector('.summary-box p').innerHTML = `ASSISTÊNCIA: <span id="total-count">${total}</span> ${pessoasText}`;
+
+            // Controla a ativação dos botões e estilos.
+            const shareButton = document.getElementById('share-button');
+            const resetButton = document.getElementById('reset-button');
+            const summaryBox = document.querySelector('.summary-box');
+
+            if (total === 0) {
+                shareButton.disabled = true;
+                resetButton.disabled = true;
+                summaryBox.classList.add('zero-count');
+                summaryBox.classList.remove('advanced-share-mode');
+                isAdvancedShareMode = false;
+            } else {
+                shareButton.disabled = false;
+                resetButton.disabled = false;
+                summaryBox.classList.remove('zero-count');
+            }
+        }
+        
+        // Cria a grade de assentos para uma seção específica.
+        function createSeats(sectionId, layout) {
+            const section = document.getElementById(sectionId);
+            section.innerHTML = ''; // Limpa a grade existente
+            const { rows, cols } = layout;
+            for (let i = 0; i < rows; i++) {
+                const row = document.createElement('div');
+                row.className = 'seat-row';
+                for (let j = 0; j < cols; j++) {
+                    const seat = document.createElement('div');
+                    seat.className = 'seat';
+                    seat.onclick = toggleSeat;
+                    row.appendChild(seat);
+                }
+                section.appendChild(row);
+            }
+        }
+
+        function recreateAllSeats() {
+            createSeats('left-seats', seatLayout.left);
+            createSeats('center-seats', seatLayout.center);
+            createSeats('right-seats', seatLayout.right);
+            createSeats('sala-b-seats', seatLayout.salaB);
+        }
+
+        // --- 3. Funções de Persistência de Dados ---
+
+        // Salva o estado atual da aplicação no localStorage.
+        function saveState() {
+            try {
+                localStorage.setItem(storageKey, JSON.stringify(appState));
+                localStorage.setItem(layoutStorageKey, JSON.stringify(seatLayout));
+            } catch (e) {
+                console.error("Erro ao salvar estado no localStorage:", e);
+            }
+        }
+        
+        // Carrega o estado do localStorage e o aplica, se disponível.
+        function loadState() {
+            try {
+                const savedState = localStorage.getItem(storageKey);
+                if (savedState) {
+                    const parsedState = JSON.parse(savedState);
+                    if (parsedState && parsedState.seats && typeof parsedState.standCount === 'number') {
+                        appState = parsedState;
+                    } else {
+                        console.warn("Dados corrompidos no localStorage. O estado de assistência será redefinido.");
+                        localStorage.removeItem(storageKey);
+                    }
+                }
+                const savedLayout = localStorage.getItem(layoutStorageKey);
+                if (savedLayout) {
+                    const parsedLayout = JSON.parse(savedLayout);
+                    // Atualiza apenas os layouts que foram salvos
+                    if (parsedLayout.left) seatLayout.left = parsedLayout.left;
+                    if (parsedLayout.center) seatLayout.center = parsedLayout.center;
+                    if (parsedLayout.right) seatLayout.right = parsedLayout.right;
+                    if (parsedLayout.salaB) seatLayout.salaB = parsedLayout.salaB;
+                }
+            } catch (e) {
+                console.error("Erro ao carregar estado do localStorage:", e);
+                localStorage.removeItem(storageKey);
+                localStorage.removeItem(layoutStorageKey);
+            }
+        }
+
+        // --- 4. Manipuladores de Eventos ---
+
+        // Alterna o estado de seleção de um assento.
+        function toggleSeat(event) {
+            const seat = event.target.closest('.seat');
+            if (!seat) return;
+            
+            const isSelected = seat.classList.contains('selected');
+            const sectionElement = seat.closest('.seat-section');
+            const sectionTitle = sectionElement.querySelector('h2').textContent.trim().toLowerCase();
+            let sectionId;
+            
+            if (sectionTitle === 'esquerda') {
+                sectionId = 'left';
+            } else if (sectionTitle === 'central') {
+                sectionId = 'center';
+            } else if (sectionTitle === 'direita') {
+                sectionId = 'right';
+            } else if (sectionTitle === 'sala b') {
+                sectionId = 'salaB';
+            }
+
+            if (!sectionId) return;
+
+            const seatRowIndex = Array.from(seat.parentNode.parentNode.children).indexOf(seat.parentNode);
+            const seatColIndex = Array.from(seat.parentNode.children).indexOf(seat);
+            
+            if (isSelected) {
+                appState.seats[sectionId] = appState.seats[sectionId].filter(
+                    s => s.row !== seatRowIndex || s.col !== seatColIndex
+                );
+            } else {
+                appState.seats[sectionId].push({ row: seatRowIndex, col: seatColIndex });
+            }
+            
+            updateUI();
+            saveState();
+        }
+
+        // Zera todos os contadores e limpa o armazenamento.
+        function resetAll() {
+            appState.seats = {
+                left: [],
+                center: [],
+                right: [],
+                salaB: []
+            };
+            appState.standCount = 0;
+            updateUI();
+            localStorage.removeItem(storageKey);
+        }
+        
+        // Gera e compartilha a mensagem de contagem no WhatsApp.
+        function shareOnWhatsApp() {
+            const today = new Date();
+            const day = String(today.getDate()).padStart(2, '0');
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const year = today.getFullYear();
+            const formattedDate = `${day}/${month}/${year}`;
+            
+            let message;
+            if (isAdvancedShareMode) {
+                const total = appState.seats.left.length + appState.seats.center.length + appState.seats.right.length + appState.seats.salaB.length + appState.standCount;
+                message = `Assistência presencial ${formattedDate}:\nEsquerda: ${appState.seats.left.length}\nCentral: ${appState.seats.center.length}\nDireita: ${appState.seats.right.length}\nSala B: ${appState.seats.salaB.length}\nEm pé: ${appState.standCount}\n*Total: ${total} pessoas*`;
+            } else {
+                const total = parseInt(document.querySelector('#total-count').textContent, 10);
+                const pessoasText = total === 1 ? "pessoa" : "pessoas";
+                message = `${formattedDate}\nAssistência presencial: *${total} ${pessoasText}*`;
+            }
+
+            const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
+            window.open(whatsappUrl, '_blank');
+        }
+
+        // --- 5. Funções do Modal de Configuração ---
+
+        function openSettingsModal(sectionId) {
+            currentSectionId = sectionId;
+            const { rows, cols } = seatLayout[sectionId];
+            document.getElementById('modal-title').textContent = `Configurações - ${sectionId.toUpperCase()}`;
+            document.getElementById('rows-count').textContent = rows;
+            document.getElementById('cols-count').textContent = cols;
+            document.getElementById('settings-modal').classList.add('show');
+        }
+
+        function closeSettingsModal() {
+            document.getElementById('settings-modal').classList.remove('show');
+            currentSectionId = null;
+        }
+
+        function updateLayout(type, action) {
+            if (!currentSectionId) return;
+
+            const layout = seatLayout[currentSectionId];
+            if (type === 'rows') {
+                if (action === 'add') {
+                    layout.rows++;
+                } else if (action === 'remove' && layout.rows > 1) {
+                    layout.rows--;
+                }
+                document.getElementById('rows-count').textContent = layout.rows;
+            } else if (type === 'cols') {
+                if (action === 'add') {
+                    layout.cols++;
+                } else if (action === 'remove' && layout.cols > 1) {
+                    layout.cols--;
+                }
+                document.getElementById('cols-count').textContent = layout.cols;
+            }
+
+            // Trunca assentos selecionados se o layout encolher
+            appState.seats[currentSectionId] = appState.seats[currentSectionId].filter(
+                seat => seat.row < layout.rows && seat.col < layout.cols
+            );
+            
+            recreateAllSeats();
+            updateUI();
+            saveState();
+        }
+
+        // --- 6. Inicialização da Aplicação ---
+
+        // Garante que o código seja executado somente após o carregamento completo do DOM.
+        document.addEventListener('DOMContentLoaded', () => {
+            // Carrega o estado salvo antes de construir a UI.
+            loadState();
+
+            // Cria os assentos na interface.
+            recreateAllSeats();
+            
+            // Atualiza a UI com o estado carregado.
+            updateUI();
+
+            // Adiciona ouvintes de eventos aos botões.
+            document.getElementById('reset-button').onclick = resetAll;
+            document.getElementById('share-button').onclick = shareOnWhatsApp;
+            document.getElementById('summary-box').ondblclick = () => {
+                const total = appState.seats.left.length + appState.seats.center.length + appState.seats.right.length + appState.seats.salaB.length + appState.standCount;
+                if (total > 0) {
+                    isAdvancedShareMode = !isAdvancedShareMode;
+                    const summaryBox = document.getElementById('summary-box');
+                    if (isAdvancedShareMode) {
+                        summaryBox.classList.add('advanced-share-mode');
+                    } else {
+                        summaryBox.classList.remove('advanced-share-mode');
+                    }
+                }
+            };
+
+            const standInput = document.getElementById('stand-count-input');
+            const plusButton = document.getElementById('plus-button');
+            const minusButton = document.getElementById('minus-button');
+            
+            function handleStandCount(isPlus) {
+                if (isPlus) {
+                    appState.standCount++;
+                } else {
+                    if (appState.standCount > 0) {
+                        appState.standCount--;
+                    }
+                }
+                updateUI();
+                saveState();
+            }
+
+            plusButton.addEventListener('click', () => handleStandCount(true));
+            plusButton.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                handleStandCount(true);
+            });
+
+            minusButton.addEventListener('click', () => handleStandCount(false));
+            minusButton.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                handleStandCount(false);
+            });
+            
+            standInput.oninput = (e) => {
+                const value = parseInt(e.target.value, 10);
+                appState.standCount = Math.max(0, isNaN(value) ? 0 : value);
+                updateUI();
+                saveState();
+            };
+            
+            adjustContentPadding();
+
+            // Adiciona ouvintes para os botões de configuração
+            document.querySelectorAll('.settings-button').forEach(button => {
+                button.addEventListener('click', () => {
+                    const sectionId = button.dataset.section;
+                    openSettingsModal(sectionId);
+                });
+            });
+
+            document.getElementById('close-modal-button').onclick = closeSettingsModal;
+            document.getElementById('add-row-button').onclick = () => updateLayout('rows', 'add');
+            document.getElementById('remove-row-button').onclick = () => updateLayout('rows', 'remove');
+            document.getElementById('add-col-button').onclick = () => updateLayout('cols', 'add');
+            document.getElementById('remove-col-button').onclick = () => updateLayout('cols', 'remove');
+        });
+    </script>
+</body>
+</html>
