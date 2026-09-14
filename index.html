@@ -825,7 +825,15 @@
             const salaBSeats = appState.seats.salaB ? appState.seats.salaB.length : 0;
             const total = leftSeats + centerSeats + rightSeats + salaBSeats + appState.standCount;
 
-            let text = `*ASSISTÊNCIA: ${total} PESSOAS*`;
+            // Formatação da data atual dinamicamente (DD/MM/AAAA)
+            const today = new Date();
+            const day = String(today.getDate()).padStart(2, '0');
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const year = today.getFullYear();
+            const formattedDate = `${day}/${month}/${year}`;
+
+            const pessoasText = total === 1 ? "pessoa" : "pessoas";
+            let text = `${formattedDate}\nAssistência presencial: * ${total} ${pessoasText}*`;
 
             // Se o modo detalhado (borda vermelha) estiver ativado por duplo clique
             if (isAdvancedShareMode) {
