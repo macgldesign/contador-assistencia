@@ -4,29 +4,42 @@
   "display": "standalone",
   "name": "Contador de Assistência",
   "orientation": "portrait",
-  "scope": "/",
+  "scope": "/contador-assistencia/",
   "short_name": "Contador de Assistência",
-  "start_url": "/",
+  "start_url": "/contador-assistencia/",
   "theme_color": "#ffffff",
-  "icons": [
-    {
-      "src": "data:image/svg+xml,&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor'&gt;&lt;path d='M19 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2zM9.5 17L5 12.5l1.5-1.5L9.5 14l6-6L17 9.5l-7.5 7.5z'/&gt;&lt;/svg&gt;",
-      "isSquare": false,
-      "isPng": false,
-      "isWebp": false,
-      "isJpg": false,
-      "width": 0,
-      "is512x512": false,
-      "is256x256": false,
-      "is192x192": false
-    }
-  ],
-  "id": "/contador-assistencia",
+  "id": "/contador-assistencia/",
   "description": "O Contador de Assistência é uma ferramenta simples e eficiente desenvolvida para facilitar a contagem e a organização do público em reuniões e eventos. Com interface intuitiva, permite registrar a presença por grupos de assentos personalizáveis e compartilhar os relatórios diretamente via WhatsApp.",
   "lang": "pt",
   "categories": [
     "events",
     "productivity",
     "utilities"
+  ],
+  "icons": [
+    {
+      "src": "android/launchericon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "android/launchericon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "android/launchericon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "android/launchericon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
   ]
 }
