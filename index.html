@@ -94,8 +94,8 @@
             width: 100%;
         }
         .seat {
-            width: 38px;
-            height: 38px;
+            width: 40px;
+            height: 40px;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -107,7 +107,7 @@
             box-sizing: border-box;
         }
 
-        /* Ajuste para telas pequenas (ex: S23) para encaixar 8 colunas sem rolar a tela */
+        /* Ajuste para telas pequenas (ex: S23) mantendo ícones legíveis */
         @media (max-width: 420px) {
             .seat-section {
                 padding: 1rem 0.35rem;
@@ -116,8 +116,8 @@
                 gap: 2px;
             }
             .seat {
-                width: clamp(26px, 7.5vw, 36px);
-                height: clamp(26px, 7.5vw, 36px);
+                width: clamp(32px, 8.5vw, 38px);
+                height: clamp(32px, 8.5vw, 38px);
             }
         }
 
@@ -134,8 +134,8 @@
             display: none;
         }
         .seat svg {
-            width: 70%;
-            height: 70%;
+            width: 85%;
+            height: 85%;
             fill: none;
             stroke: #fff;
             stroke-width: 2.5;
@@ -237,9 +237,11 @@
             font-size: 1.25rem;
             font-weight: 700;
             color: #10b981;
-            border: 1px solid #10b981;
+            border: 2px solid #10b981;
             transition: color 0.2s, border-color 0.2s;
             gap: 0.5rem;
+            cursor: pointer;
+            user-select: none;
         }
         .summary-box.advanced-share-mode {
             background-color: #fff;
@@ -515,7 +517,7 @@
                 </div>
             </div>
             <footer class="footer text-gray-500 text-xs mb-4">
-                <span>by macgldesign - v 1.0.3</span>
+                <span>by macgldesign</span>
             </footer>
         </div>
     </div>
@@ -808,22 +810,34 @@
             updateUI();
         });
 
-        // Compartilhar WhatsApp
+        const summaryBox = document.getElementById('summary-box');
+        if (summaryBox) {
+            summaryBox.addEventListener('dblclick', () => {
+                isAdvancedShareMode = !isAdvancedShareMode;
+                updateUI();
+            });
+        }
+
         document.getElementById('share-button').addEventListener('click', () => {
-            const leftSeats = appState.seats.left.length;
-            const centerSeats = appState.seats.center.length;
-            const rightSeats = appState.seats.right.length;
-            const salaBSeats = appState.seats.salaB.length;
+            const leftSeats = appState.seats.left ? appState.seats.left.length : 0;
+            const centerSeats = appState.seats.center ? appState.seats.center.length : 0;
+            const rightSeats = appState.seats.right ? appState.seats.right.length : 0;
+            const salaBSeats = appState.seats.salaB ? appState.seats.salaB.length : 0;
             const total = leftSeats + centerSeats + rightSeats + salaBSeats + appState.standCount;
 
-            let text = `*ASSISTÊNCIA: ${total} PESSOAS*\n\n`;
-            if (leftSeats > 0) text += `• ${panelConfig.left.name}: ${leftSeats}\n`;
-            if (centerSeats > 0) text += `• ${panelConfig.center.name}: ${centerSeats}\n`;
-            if (rightSeats > 0) text += `• ${panelConfig.right.name}: ${rightSeats}\n`;
-            if (salaBSeats > 0) text += `• ${panelConfig.salaB.name}: ${salaBSeats}\n`;
-            if (appState.standCount > 0) text += `• EM PÉ: ${appState.standCount}\n`;
+            let text = `*ASSISTÊNCIA: ${total} PESSOAS*`;
 
-            const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+            // Se o modo detalhado (borda vermelha) estiver ativado por duplo clique
+            if (isAdvancedShareMode) {
+                text += `\n\n`;
+                if (leftSeats > 0) text += `• ${panelConfig.left.name}: ${leftSeats}\n`;
+                if (centerSeats > 0) text += `• ${panelConfig.center.name}: ${centerSeats}\n`;
+                if (rightSeats > 0) text += `• ${panelConfig.right.name}: ${rightSeats}\n`;
+                if (salaBSeats > 0) text += `• ${panelConfig.salaB.name}: ${salaBSeats}\n`;
+                if (appState.standCount > 0) text += `• EM PÉ: ${appState.standCount}\n`;
+            }
+
+            const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(text.trim())}`;
             window.open(url, '_blank');
         });
 
