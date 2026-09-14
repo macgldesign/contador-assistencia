@@ -515,7 +515,7 @@
                 </div>
             </div>
             <footer class="footer text-gray-500 text-xs mb-4">
-                <span>by macgldesign - v 1.0</span>
+                <span>by macgldesign - v 1.0.3</span>
             </footer>
         </div>
     </div>
@@ -943,8 +943,21 @@
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
           navigator.serviceWorker.register('/contador-assistencia/sw.js')
-            .then(reg => console.log('Service Worker registrado!', reg))
+            .then(reg => {
+              console.log('Service Worker registrado!', reg);
+              // Força a buscar nova versão no GitHub Pages sempre que abrir
+              reg.update();
+            })
             .catch(err => console.error('Erro ao registrar Service Worker:', err));
+
+          // Recarrega a página automaticamente assim que o novo Service Worker assumir
+          let refreshing = false;
+          navigator.serviceWorker.addEventListener('controllerchange', () => {
+            if (!refreshing) {
+              refreshing = true;
+              window.location.reload();
+            }
+          });
         });
       }
     </script>
