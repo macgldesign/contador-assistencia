@@ -517,7 +517,7 @@
                 </div>
             </div>
             <footer class="footer text-gray-500 text-xs mb-4">
-                <span>by macgldesign</span>
+                <span id="footer-text">by macgldesign</span>
             </footer>
         </div>
     </div>
@@ -833,7 +833,7 @@
             const formattedDate = `${day}/${month}/${year}`;
 
             const pessoasText = total === 1 ? "pessoa" : "pessoas";
-            let text = `${formattedDate}\nAssistência presencial: * ${total} ${pessoasText}*`;
+            let text = `${formattedDate}\nAssistência presencial: *${total} ${pessoasText}*`;
 
             // Se o modo detalhado (borda vermelha) estiver ativado por duplo clique
             if (isAdvancedShareMode) {
@@ -949,12 +949,33 @@
             updateUI();
         });
 
+        // Carrega a versão do sw.js dinamicamente e exibe no rodapé
+        function loadVersionInFooter() {
+            fetch('/contador-assistencia/sw.js')
+                .then(response => response.text())
+                .then(text => {
+                    const match = text.match(/CACHE_NAME\s*=\s*['"]([^'"]+)['"]/);
+                    if (match && match[1]) {
+                        // Extrai apenas a versão (ex: 'v1.0.4' de 'contador-assistencia-v1.0.4')
+                        const fullCacheName = match[1];
+                        const versionMatch = fullCacheName.match(/v\d+\.\d+\.\d+/);
+                        const version = versionMatch ? versionMatch[0] : fullCacheName;
+                        const footerSpan = document.getElementById('footer-text');
+                        if (footerSpan) {
+                            footerSpan.textContent = `by macgldesign — ${version}`;
+                        }
+                    }
+                })
+                .catch(err => console.warn('Não foi possível carregar a versão dinamicamente:', err));
+        }
+
         // Inicialização
         window.addEventListener('DOMContentLoaded', () => {
             loadState();
             recreateAllSeats();
             updateUI();
             adjustContentPadding();
+            loadVersionInFooter();
         });
 
         window.addEventListener('resize', adjustContentPadding);
