@@ -1023,5 +1023,15 @@
             document.getElementById('remove-col-button').onclick = () => updateLayout('cols', 'remove');
         });
     </script>
+
+    <script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/contador-assistencia/sw.js')
+        .then(reg => console.log('Service Worker registrado!', reg))
+        .catch(err => console.error('Erro ao registrar Service Worker:', err));
+    });
+  }
+</script>
 </body>
 </html>
