@@ -1,4 +1,4 @@
-const CACHE_NAME = 'contador-assistencia-v1.0.41';
+const CACHE_NAME = 'contador-assistencia-v1.0.42';
 const ASSETS = [
   '/contador-assistencia/',
   '/contador-assistencia/index.html',
