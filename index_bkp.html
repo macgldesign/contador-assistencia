@@ -13,6 +13,7 @@
         html, body {
             overflow-x: hidden;
             max-width: 100vw;
+            touch-action: pan-y;
         }
 
         body {
@@ -24,6 +25,16 @@
             min-height: 100vh;
             margin: 0;
             padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+            touch-action: pan-y;
+        }
+
+        /* Mantém a seleção disponível apenas nos campos de edição */
+        input, textarea {
+            user-select: text;
+            -webkit-user-select: text;
         }
         .fixed-header {
             position: fixed;
@@ -40,6 +51,12 @@
             will-change: transform;
             -webkit-transform: translate3d(0, 0, 0);
             transform: translate3d(0, 0, 0);
+        }
+        .scrolling-actions {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 0 0.5rem;
+            margin-bottom: 0.5rem;
         }
         .container {
             display: flex;
@@ -94,12 +111,12 @@
             width: 100%;
         }
         .seat {
-            width: 40px;
-            height: 40px;
+            width: 46px;
+            height: 46px;
             display: flex;
             justify-content: center;
             align-items: center;
-            border-radius: 0.25rem;
+            border-radius: 0.5rem;
             cursor: pointer;
             background-color: #fff;
             border: 2px solid #9ca3af;
@@ -116,8 +133,8 @@
                 gap: 2px;
             }
             .seat {
-                width: clamp(32px, 8.5vw, 38px);
-                height: clamp(32px, 8.5vw, 38px);
+                width: clamp(35px, 9.5vw, 42px);
+                height: clamp(35px, 9.5vw, 42px);
             }
         }
 
@@ -438,14 +455,15 @@
         <div class="summary-box" id="summary-box">
             <p>ASSISTÊNCIA: <span id="total-count">0</span> PESSOAS</p>
         </div>
-        <div class="flex-row-center mt-2">
-            <button id="reset-button" class="reset-button">ZERAR</button>
-            <button id="occupy-button" class="occupy-button">OCUPAR</button>
-            <button id="share-button" class="share-button" disabled>
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-share-2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
-            </button>
-        </div>
     </header>
+
+    <div class="flex-row-center mt-2 scrolling-actions" id="action-bar">
+        <button id="reset-button" class="reset-button">ZERAR</button>
+        <button id="occupy-button" class="occupy-button">OCUPAR</button>
+        <button id="share-button" class="share-button" disabled>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-share-2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+        </button>
+    </div>
 
     <div class="container mobile-layout lg:flex-row lg:justify-center lg:items-start lg:gap-8" id="main-content">
         
@@ -565,6 +583,24 @@
 
     <script>
         // --- 1. Definições de Estado e Layout ---
+
+        // Impede zoom por gestos no navegador, mantendo a rolagem vertical.
+        function preventBrowserZoom(event) {
+            event.preventDefault();
+        }
+
+        document.addEventListener('gesturestart', preventBrowserZoom, { passive: false });
+        document.addEventListener('gesturechange', preventBrowserZoom, { passive: false });
+        document.addEventListener('gestureend', preventBrowserZoom, { passive: false });
+        document.addEventListener('touchstart', (event) => {
+            if (event.touches.length > 1) event.preventDefault();
+        }, { passive: false });
+        document.addEventListener('touchmove', (event) => {
+            if (event.touches.length > 1) event.preventDefault();
+        }, { passive: false });
+        window.addEventListener('wheel', (event) => {
+            if (event.ctrlKey) event.preventDefault();
+        }, { passive: false });
         
         const defaultPanelConfig = {
             left: { name: 'ESQUERDA', rows: 9, cols: 4 },
@@ -590,14 +626,21 @@
         };
 
         let currentSectionId = null;
+        const LONG_PRESS_DURATION = 800;
+        const longPressTimers = new WeakMap();
+        const longPressStates = new WeakMap();
 
         // --- 2. Funções de Gerenciamento da UI ---
 
         function adjustContentPadding() {
             const header = document.getElementById('main-header');
+            const actionBar = document.getElementById('action-bar');
             const content = document.getElementById('main-content');
-            if (header && content) {
-                content.style.marginTop = `${header.offsetHeight + 10}px`;
+            if (header && actionBar) {
+                actionBar.style.marginTop = `${header.offsetHeight + 6}px`;
+            }
+            if (content) {
+                content.style.marginTop = '0px';
             }
         }
         
@@ -692,6 +735,12 @@
                         </svg>
                     `;
                     seat.onclick = toggleSeat;
+                    seat.addEventListener('pointerdown', startSeatLongPress);
+                    seat.addEventListener('pointermove', trackSeatLongPress);
+                    seat.addEventListener('pointerup', finishSeatLongPress);
+                    seat.addEventListener('pointerleave', cancelSeatLongPress);
+                    seat.addEventListener('pointercancel', cancelSeatLongPress);
+                    seat.addEventListener('contextmenu', (event) => event.preventDefault());
                     row.appendChild(seat);
                 }
                 sectionElement.appendChild(row);
@@ -740,9 +789,110 @@
 
         // --- 4. Manipuladores de Eventos ---
 
+        function fillSeatsToLeft(seat) {
+            const sectionElement = seat.closest('.seat-section');
+            const seatGrid = sectionElement ? sectionElement.querySelector('.seat-grid') : null;
+            const sectionTitleElement = sectionElement
+                ? sectionElement.querySelector('.title-container span')
+                : null;
+            const sectionId = sectionTitleElement ? sectionTitleElement.dataset.section : null;
+
+            if (!sectionId || !seatGrid || !appState.seats[sectionId]) return;
+
+            const row = seat.parentElement;
+            const rowIndex = Array.from(seatGrid.children).indexOf(row);
+            const seatColIndex = Array.from(row.children).indexOf(seat);
+
+            if (rowIndex < 0 || seatColIndex < 0) return;
+
+            const occupiedSeats = new Set(
+                appState.seats[sectionId].map(({ row, col }) => `${row}:${col}`)
+            );
+
+            for (let col = 0; col <= seatColIndex; col++) {
+                const seatKey = `${rowIndex}:${col}`;
+                if (!occupiedSeats.has(seatKey)) {
+                    appState.seats[sectionId].push({ row: rowIndex, col });
+                }
+            }
+
+            saveState();
+            updateUI();
+        }
+
+        function startSeatLongPress(event) {
+            if (event.pointerType === 'mouse' && event.button !== 0) return;
+
+            const seat = event.currentTarget;
+            const state = {
+                startX: event.clientX,
+                startY: event.clientY,
+                triggered: false
+            };
+
+            longPressStates.set(seat, state);
+            longPressTimers.set(seat, setTimeout(() => {
+                const currentState = longPressStates.get(seat);
+                if (!currentState) return;
+
+                currentState.triggered = true;
+                fillSeatsToLeft(seat);
+            }, LONG_PRESS_DURATION));
+        }
+
+        function trackSeatLongPress(event) {
+            const seat = event.currentTarget;
+            const state = longPressStates.get(seat);
+            if (!state || state.triggered) return;
+
+            const distance = Math.hypot(
+                event.clientX - state.startX,
+                event.clientY - state.startY
+            );
+
+            if (distance > 10) {
+                cancelSeatLongPress(event);
+            }
+        }
+
+        function finishSeatLongPress(event) {
+            const seat = event.currentTarget;
+            const state = longPressStates.get(seat);
+            const timer = longPressTimers.get(seat);
+
+            if (timer) clearTimeout(timer);
+            longPressTimers.delete(seat);
+            longPressStates.delete(seat);
+
+            if (state && state.triggered) {
+                seat.dataset.skipNextClick = 'true';
+                setTimeout(() => delete seat.dataset.skipNextClick, 0);
+            }
+        }
+
+        function cancelSeatLongPress(event) {
+            const seat = event.currentTarget;
+            const state = longPressStates.get(seat);
+            const timer = longPressTimers.get(seat);
+
+            if (timer) clearTimeout(timer);
+            longPressTimers.delete(seat);
+            longPressStates.delete(seat);
+
+            if (state && state.triggered) {
+                seat.dataset.skipNextClick = 'true';
+                setTimeout(() => delete seat.dataset.skipNextClick, 0);
+            }
+        }
+
         function toggleSeat(event) {
             const seat = event.target.closest('.seat');
             if (!seat) return;
+
+            if (seat.dataset.skipNextClick === 'true') {
+                delete seat.dataset.skipNextClick;
+                return;
+            }
             
             const isSelected = seat.classList.contains('selected');
             const sectionElement = seat.closest('.seat-section');
