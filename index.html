@@ -52,6 +52,12 @@
             -webkit-transform: translate3d(0, 0, 0);
             transform: translate3d(0, 0, 0);
         }
+        .scrolling-actions {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 0 0.5rem;
+            margin-bottom: 0.5rem;
+        }
         .container {
             display: flex;
             flex-direction: column;
@@ -449,14 +455,15 @@
         <div class="summary-box" id="summary-box">
             <p>ASSISTÊNCIA: <span id="total-count">0</span> PESSOAS</p>
         </div>
-        <div class="flex-row-center mt-2">
-            <button id="reset-button" class="reset-button">ZERAR</button>
-            <button id="occupy-button" class="occupy-button">OCUPAR</button>
-            <button id="share-button" class="share-button" disabled>
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-share-2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
-            </button>
-        </div>
     </header>
+
+    <div class="flex-row-center mt-2 scrolling-actions" id="action-bar">
+        <button id="reset-button" class="reset-button">ZERAR</button>
+        <button id="occupy-button" class="occupy-button">OCUPAR</button>
+        <button id="share-button" class="share-button" disabled>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-share-2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+        </button>
+    </div>
 
     <div class="container mobile-layout lg:flex-row lg:justify-center lg:items-start lg:gap-8" id="main-content">
         
@@ -627,9 +634,13 @@
 
         function adjustContentPadding() {
             const header = document.getElementById('main-header');
+            const actionBar = document.getElementById('action-bar');
             const content = document.getElementById('main-content');
-            if (header && content) {
-                content.style.marginTop = `${header.offsetHeight + 10}px`;
+            if (header && actionBar) {
+                actionBar.style.marginTop = `${header.offsetHeight + 10}px`;
+            }
+            if (content) {
+                content.style.marginTop = '0px';
             }
         }
         
