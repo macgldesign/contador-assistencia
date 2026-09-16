@@ -619,6 +619,9 @@
         };
 
         let currentSectionId = null;
+        const LONG_PRESS_DURATION = 1000;
+        const longPressTimers = new WeakMap();
+        const longPressStates = new WeakMap();
 
         // --- 2. Funções de Gerenciamento da UI ---
 
@@ -721,6 +724,12 @@
                         </svg>
                     `;
                     seat.onclick = toggleSeat;
+                    seat.addEventListener('pointerdown', startSeatLongPress);
+                    seat.addEventListener('pointermove', trackSeatLongPress);
+                    seat.addEventListener('pointerup', finishSeatLongPress);
+                    seat.addEventListener('pointerleave', cancelSeatLongPress);
+                    seat.addEventListener('pointercancel', cancelSeatLongPress);
+                    seat.addEventListener('contextmenu', (event) => event.preventDefault());
                     row.appendChild(seat);
                 }
                 sectionElement.appendChild(row);
@@ -769,9 +778,110 @@
 
         // --- 4. Manipuladores de Eventos ---
 
+        function fillSeatsToLeft(seat) {
+            const sectionElement = seat.closest('.seat-section');
+            const seatGrid = sectionElement ? sectionElement.querySelector('.seat-grid') : null;
+            const sectionTitleElement = sectionElement
+                ? sectionElement.querySelector('.title-container span')
+                : null;
+            const sectionId = sectionTitleElement ? sectionTitleElement.dataset.section : null;
+
+            if (!sectionId || !seatGrid || !appState.seats[sectionId]) return;
+
+            const row = seat.parentElement;
+            const rowIndex = Array.from(seatGrid.children).indexOf(row);
+            const seatColIndex = Array.from(row.children).indexOf(seat);
+
+            if (rowIndex < 0 || seatColIndex < 0) return;
+
+            const occupiedSeats = new Set(
+                appState.seats[sectionId].map(({ row, col }) => `${row}:${col}`)
+            );
+
+            for (let col = 0; col <= seatColIndex; col++) {
+                const seatKey = `${rowIndex}:${col}`;
+                if (!occupiedSeats.has(seatKey)) {
+                    appState.seats[sectionId].push({ row: rowIndex, col });
+                }
+            }
+
+            saveState();
+            updateUI();
+        }
+
+        function startSeatLongPress(event) {
+            if (event.pointerType === 'mouse' && event.button !== 0) return;
+
+            const seat = event.currentTarget;
+            const state = {
+                startX: event.clientX,
+                startY: event.clientY,
+                triggered: false
+            };
+
+            longPressStates.set(seat, state);
+            longPressTimers.set(seat, setTimeout(() => {
+                const currentState = longPressStates.get(seat);
+                if (!currentState) return;
+
+                currentState.triggered = true;
+                fillSeatsToLeft(seat);
+            }, LONG_PRESS_DURATION));
+        }
+
+        function trackSeatLongPress(event) {
+            const seat = event.currentTarget;
+            const state = longPressStates.get(seat);
+            if (!state || state.triggered) return;
+
+            const distance = Math.hypot(
+                event.clientX - state.startX,
+                event.clientY - state.startY
+            );
+
+            if (distance > 10) {
+                cancelSeatLongPress(event);
+            }
+        }
+
+        function finishSeatLongPress(event) {
+            const seat = event.currentTarget;
+            const state = longPressStates.get(seat);
+            const timer = longPressTimers.get(seat);
+
+            if (timer) clearTimeout(timer);
+            longPressTimers.delete(seat);
+            longPressStates.delete(seat);
+
+            if (state && state.triggered) {
+                seat.dataset.skipNextClick = 'true';
+                setTimeout(() => delete seat.dataset.skipNextClick, 0);
+            }
+        }
+
+        function cancelSeatLongPress(event) {
+            const seat = event.currentTarget;
+            const state = longPressStates.get(seat);
+            const timer = longPressTimers.get(seat);
+
+            if (timer) clearTimeout(timer);
+            longPressTimers.delete(seat);
+            longPressStates.delete(seat);
+
+            if (state && state.triggered) {
+                seat.dataset.skipNextClick = 'true';
+                setTimeout(() => delete seat.dataset.skipNextClick, 0);
+            }
+        }
+
         function toggleSeat(event) {
             const seat = event.target.closest('.seat');
             if (!seat) return;
+
+            if (seat.dataset.skipNextClick === 'true') {
+                delete seat.dataset.skipNextClick;
+                return;
+            }
             
             const isSelected = seat.classList.contains('selected');
             const sectionElement = seat.closest('.seat-section');
