@@ -1,1 +1,1683 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <meta name="color-scheme" content="light dark" id="meta-color-scheme">
+    <link rel="manifest" href="manifest.json">
+    <title>Contador de Assistência</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor'%3E%3Cpath d='M19 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2zM9.5 17L5 12.5l1.5-1.5L9.5 14l6-6L17 9.5l-7.5 7.5z'/%3E%3C/svg%3E">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        
+        html, body {
+            overflow-x: hidden;
+            max-width: 100vw;
+            touch-action: pan-y;
+        }
 
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            color: #1f2937;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+            touch-action: pan-y;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        /* Suporte ao Tema Escuro */
+        :root {
+            color-scheme: light dark;
+        }
+        html:not(.dark) {
+            color-scheme: only light;
+        }
+        html.dark {
+            color-scheme: dark;
+        }
+
+        body.dark {
+            background-color: #121212;
+            color: #e5e5e5;
+        }
+
+        /* Mantém a seleção disponível apenas nos campos de edição */
+        input, textarea {
+            user-select: text;
+            -webkit-user-select: text;
+        }
+        .fixed-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+            will-change: transform;
+            -webkit-transform: translate3d(0, 0, 0);
+            transform: translate3d(0, 0, 0);
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        body.dark .fixed-header {
+            background-color: #121212;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+        }
+
+        .scrolling-actions-container {
+            position: relative;
+            width: 100%;
+            max-width: 1000px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 0.5rem;
+            margin-bottom: 0.5rem;
+            box-sizing: border-box;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            align-items: center;
+            width: 100%;
+            max-width: 1000px;
+            padding: 0 0.5rem;
+            box-sizing: border-box;
+        }
+
+        .auditorium {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            width: 100%;
+        }
+        .stage {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            width: 100%;
+        }
+        .seat-section {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            background-color: #fff;
+            padding: 1.25rem 0.75rem;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: 2px solid #e5e7eb;
+            width: 100%;
+            box-sizing: border-box;
+            max-width: 100%;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        body.dark .seat-section {
+            background-color: #1e1e1e;
+            border-color: #333333;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.4);
+        }
+
+        .seat-grid {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            width: 100%;
+        }
+        .seat-row {
+            display: flex;
+            gap: 4px;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .seat {
+            position: relative;
+            overflow: hidden;
+            width: 46px;
+            height: 46px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            background-color: #fff;
+            border: 2px solid #9ca3af;
+            transition: all 0.2s ease-in-out;
+            box-sizing: border-box;
+        }
+
+        body.dark .seat {
+            background-color: #2a2a2a;
+            border-color: #444444;
+        }
+
+        /* Ajuste para telas pequenas mantendo ícones legíveis */
+        @media (max-width: 420px) {
+            .seat-section {
+                padding: 1rem 0.35rem;
+            }
+            .seat-row {
+                gap: 2px;
+            }
+            .seat {
+                width: clamp(35px, 9.5vw, 42px);
+                height: clamp(35px, 9.5vw, 42px);
+            }
+        }
+
+        .seat.selected {
+            background-color: #10b981;
+            border-color: #10b981;
+        }
+
+        body.dark .seat.selected {
+            background-color: #10b981;
+            border-color: #10b981;
+        }
+
+        .seat .checked-icon {
+            display: none;
+        }
+        .seat.selected .checked-icon {
+            display: block;
+        }
+        .seat svg {
+            width: 85%;
+            height: 85%;
+            fill: none;
+            stroke: #fff;
+            stroke-width: 2.5;
+            transition: all 0.2s ease-in-out;
+        }
+
+        .seat:hover {
+            box-shadow: 0 0 0 2px #d1d5db;
+        }
+
+        body.dark .seat:hover {
+            box-shadow: 0 0 0 2px #555555;
+        }
+
+        .seat.long-pressing {
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.35);
+            transform: scale(0.96);
+        }
+        .seat.long-pressing::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 0.5rem;
+            background-color: rgba(16, 185, 129, 0.45);
+            transform: scaleX(0);
+            transform-origin: left center;
+            animation: long-press-progress var(--lp-duration, 650ms) linear var(--lp-delay, 150ms) both;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        @keyframes long-press-progress {
+            0% {
+                transform: scaleX(0);
+            }
+            100% {
+                transform: scaleX(1);
+            }
+        }
+
+        .seat.quick-filled {
+            animation: quick-fill-pulse 0.45s ease-in-out;
+        }
+
+        @keyframes quick-fill-pulse {
+            0% {
+                transform: scale(0.92);
+            }
+            50% {
+                transform: scale(1.08);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .seat-count-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+        .seat-count {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #4b5563;
+            flex-grow: 1;
+            text-align: center;
+            transition: color 0.3s ease;
+        }
+
+        body.dark .seat-count {
+            color: #e5e5e5;
+        }
+
+        .title-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            gap: 4px;
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+        .panel-title {
+            text-align: center;
+            flex-grow: 1;
+            color: #1f2937;
+            transition: color 0.3s ease;
+        }
+
+        body.dark .panel-title {
+            color: #e5e5e5;
+        }
+
+        .settings-button {
+            background-color: transparent;
+            border: none;
+            box-shadow: none;
+            cursor: pointer;
+            padding: 0 0.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #9ca3af;
+            font-size: 0.875rem;
+            font-weight: 600;
+            transition: color 0.2s;
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        .settings-button:hover {
+            color: #4b5563;
+        }
+
+        body.dark .settings-button:hover {
+            color: #ffffff;
+        }
+
+        .reset-button, .occupy-button, .share-button {
+            padding: 0.5rem 0.75rem; /* Margens laterais reduzidas de 1rem para 0.75rem */
+            color: #fff;
+            font-weight: 600;
+            border-radius: 0.5rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.2s, transform 0.1s;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .reset-button {
+            background-color: #ef4444;
+        }
+        .reset-button:hover:not(:disabled) {
+            background-color: #dc2626;
+        }
+        .occupy-button {
+            background-color: #10b981;
+        }
+        .occupy-button:hover:not(:disabled) {
+            background-color: #0c9c6f;
+        }
+        .share-button {
+            background-color: #25D366;
+        }
+        .share-button:hover:not(:disabled) {
+            background-color: #1DA851;
+        }
+        .reset-button:disabled, .occupy-button:disabled, .share-button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        body.dark .reset-button:disabled,
+        body.dark .occupy-button:disabled,
+        body.dark .share-button:disabled {
+            background-color: #333333;
+            color: #777777;
+        }
+
+        /* Botão de Configurações Geral no canto direito da barra de ação */
+        .app-settings-btn {
+            position: absolute;
+            right: 0.5rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #6b7280;
+            padding: 0.5rem;
+            border-radius: 9999px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.2s, background-color 0.2s;
+        }
+
+        .app-settings-btn:hover {
+            color: #111827;
+            background-color: rgba(0, 0, 0, 0.06);
+        }
+
+        body.dark .app-settings-btn {
+            color: #999999;
+        }
+
+        body.dark .app-settings-btn:hover {
+            color: #ffffff;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .summary-box {
+            background-color: #fff;
+            padding: 0.5rem 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #10b981;
+            border: 2px solid #10b981;
+            transition: color 0.2s, border-color 0.2s, background-color 0.3s ease;
+            gap: 0.5rem;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        body.dark .summary-box {
+            background-color: #1e1e1e;
+            border-color: #10b981;
+            color: #10b981;
+        }
+
+        .summary-box.advanced-share-mode {
+            background-color: #fff;
+            border: 2px solid #ef4444;
+            color: #ef4444;
+        }
+
+        body.dark .summary-box.advanced-share-mode {
+            background-color: #1e1e1e;
+            border-color: #f87171;
+            color: #f87171;
+        }
+
+        .summary-box.zero-count {
+            color: #9ca3af;
+            border-color: #d1d5db;
+        }
+
+        body.dark .summary-box.zero-count {
+            color: #777777;
+            border-color: #333333;
+        }
+
+        .summary-box p {
+            white-space: nowrap;
+        }
+        .summary-box span {
+            font-size: 1.25rem;
+        }
+        .flex-row-center {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: center;
+            gap: 0.6rem; /* Gap levemente ajustado para encaixe harmônico */
+        }
+        .mobile-layout {
+            flex-direction: column;
+            align-items: center;
+        }
+        .mobile-layout .seat-section {
+            width: 100%;
+        }
+
+        .stand-count-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            background-color: #fff;
+            padding: 0.75rem;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: 2px solid #e5e7eb;
+            width: 100%;
+            box-sizing: border-box;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        body.dark .stand-count-section {
+            background-color: #1e1e1e;
+            border-color: #333333;
+        }
+
+        .stand-count-controls {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .stand-count-button {
+            width: 36px;
+            height: 36px;
+            color: #fff;
+            font-size: 1.25rem;
+            font-weight: 700;
+            border-radius: 0.5rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.2s;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        #minus-button {
+            background-color: #ef4444;
+        }
+        #minus-button:hover {
+            background-color: #dc2626;
+        }
+        #plus-button {
+            background-color: #10b981;
+        }
+        #plus-button:hover {
+            background-color: #0c9c6f;
+        }
+        .stand-count-input {
+            font-size: 1.75rem;
+            font-weight: 700;
+            width: 60px;
+            text-align: center;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: inherit;
+            -moz-appearance: textfield;
+        }
+        .seat-section h2,
+        .stand-count-section h2,
+        .seat-count,
+        .stand-count-input,
+        .summary-box p,
+        #minus-button,
+        #plus-button {
+            user-select: none;
+            -moz-user-select: none;
+            -webkit-user-select: none;
+            -ms-user-select: none;
+        }
+        .footer {
+            width: 100%;
+            text-align: center;
+            margin-top: 12px;
+            font-size: 0.7rem;
+            color: #9ca3af;
+            opacity: 0.65;
+        }
+
+        .undo-toast {
+            position: fixed;
+            left: 50%;
+            bottom: 1rem;
+            z-index: 300;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            width: max-content;
+            max-width: calc(100vw - 2rem);
+            padding: 0.75rem 0.9rem 0.75rem 1rem;
+            color: #fff;
+            background-color: #374151;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            transform: translate(-50%, calc(100% + 1rem));
+            opacity: 0;
+            pointer-events: none;
+            transition: transform 0.25s ease, opacity 0.25s ease;
+        }
+
+        body.dark .undo-toast {
+            background-color: #2a2a2a;
+            border: 1px solid #333333;
+        }
+
+        .undo-toast.show {
+            transform: translate(-50%, 0);
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .undo-toast button {
+            padding: 0.35rem 0.55rem;
+            color: #a7f3d0;
+            background: transparent;
+            border: none;
+            border-radius: 0.35rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .undo-toast button:hover {
+            background-color: rgba(255, 255, 255, 0.12);
+        }
+
+        .settings-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(2px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 200;
+            visibility: hidden;
+            opacity: 0;
+            transition: visibility 0.3s, opacity 0.3s;
+        }
+        .settings-modal.show {
+            visibility: visible;
+            opacity: 1;
+        }
+        .settings-content {
+            background-color: #fff;
+            padding: 1.75rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+            width: 90%;
+            max-width: 400px;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        body.dark .settings-content {
+            background-color: #1e1e1e;
+            color: #e5e5e5;
+            border: 1px solid #333333;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            font-size: 1.25rem;
+        }
+        .modal-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .modal-control-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .modal-control-button {
+            padding: 0.25rem 0.6rem;
+            background-color: #d1d5db;
+            color: #374151;
+            font-weight: 600;
+            border-radius: 0.375rem;
+            transition: background-color 0.2s;
+            cursor: pointer;
+        }
+        .modal-control-button:hover {
+            background-color: #9ca3af;
+        }
+
+        body.dark .modal-control-button {
+            background-color: #333333;
+            color: #e5e5e5;
+        }
+
+        body.dark .modal-control-button:hover {
+            background-color: #444444;
+        }
+
+        .theme-option-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 0.75rem 0.5rem;
+            border-radius: 0.75rem;
+            border: 2px solid #e5e7eb;
+            background-color: #f9fafb;
+            color: #4b5563;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .theme-option-btn:hover {
+            border-color: #10b981;
+            color: #10b981;
+        }
+
+        body.dark .theme-option-btn {
+            background-color: #121212;
+            border-color: #333333;
+            color: #999999;
+        }
+
+        .theme-option-btn.active {
+            border-color: #10b981 !important;
+            background-color: rgba(16, 185, 129, 0.08);
+            color: #10b981 !important;
+            font-weight: 600;
+        }
+
+        body.dark .theme-option-btn.active {
+            background-color: rgba(16, 185, 129, 0.15);
+        }
+
+        .edit-title-container {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            width: 100%;
+        }
+        .panel-name-row {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .panel-name-display {
+            font-weight: 600;
+            font-size: 1.25rem;
+        }
+        .edit-pencil {
+            cursor: pointer;
+            color: #9ca3af;
+        }
+        .edit-pencil:hover {
+            color: #4b5563;
+        }
+
+        body.dark .edit-pencil:hover {
+            color: #ffffff;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-start min-h-screen">
+    
+    <header class="fixed-header" id="main-header">
+        <div class="summary-box" id="summary-box">
+            <p>ASSISTÊNCIA: <span id="total-count">0</span> PESSOAS</p>
+        </div>
+    </header>
+
+    <div class="scrolling-actions-container mt-2" id="action-bar-container">
+        <div class="scrolling-actions flex items-center justify-center relative w-full" id="action-bar">
+            <div class="flex-row-center">
+                <button id="reset-button" class="reset-button">ZERAR</button>
+                <button id="occupy-button" class="occupy-button">OCUPAR</button>
+                <button id="share-button" class="share-button" disabled aria-label="Compartilhar">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-share-2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+                </button>
+            </div>
+            
+            <!-- Botão de Configurações Geral do App (Canto direito, moderno, sem borda) -->
+            <button id="app-settings-btn" class="app-settings-btn" title="Configurações do App" aria-label="Configurações do App">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <div class="container mobile-layout lg:flex-row lg:justify-center lg:items-start lg:gap-8" id="main-content">
+        
+        <div class="auditorium flex flex-col items-center w-full">
+            <div class="stage mobile-layout lg:flex-row lg:items-start lg:gap-8">
+
+                <!-- Painel Esquerda -->
+                <div class="seat-section">
+                    <div class="title-container">
+                        <span class="panel-title uppercase" id="left-title" data-section="left">ESQUERDA</span>
+                        <button class="settings-button" data-section="left">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-more-vertical"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
+                        </button>
+                    </div>
+                    <div id="left-seats" class="seat-grid"></div>
+                    <div class="seat-count-container">
+                        <p class="seat-count" id="left-count">0</p>
+                    </div>
+                </div>
+    
+                <!-- Painel Central -->
+                <div class="seat-section">
+                    <div class="title-container">
+                        <span class="panel-title uppercase" id="center-title" data-section="center">CENTRAL</span>
+                        <button class="settings-button" data-section="center">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-more-vertical"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
+                        </button>
+                    </div>
+                    <div id="center-seats" class="seat-grid"></div>
+                    <div class="seat-count-container">
+                        <p class="seat-count" id="center-count">0</p>
+                    </div>
+                </div>
+    
+                <!-- Painel Direita -->
+                <div class="seat-section">
+                    <div class="title-container">
+                        <span class="panel-title uppercase" id="right-title" data-section="right">DIREITA</span>
+                        <button class="settings-button" data-section="right">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-more-vertical"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
+                        </button>
+                    </div>
+                    <div id="right-seats" class="seat-grid"></div>
+                    <div class="seat-count-container">
+                        <p class="seat-count" id="right-count">0</p>
+                    </div>
+                </div>
+                
+                <!-- Painel Sala B -->
+                <div class="seat-section">
+                    <div class="title-container">
+                        <span class="panel-title uppercase" id="salaB-title" data-section="salaB">SALA B</span>
+                        <button class="settings-button" data-section="salaB">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-more-vertical"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
+                        </button>
+                    </div>
+                    <div id="salaB-seats" class="seat-grid"></div>
+                    <div class="seat-count-container">
+                        <p class="seat-count" id="salaB-count">0</p>
+                    </div>
+                </div>
+
+                <div class="stand-count-section">
+                    <h2 class="text-xl font-semibold text-center">EM PÉ</h2>
+                    <div class="stand-count-controls">
+                        <button id="minus-button" class="stand-count-button">-</button>
+                        <input type="text" id="stand-count-input" class="stand-count-input" value="0">
+                        <button id="plus-button" class="stand-count-button">+</button>
+                    </div>
+                </div>
+            </div>
+            <footer class="footer mb-4">
+                <span id="footer-text">by macgldesign</span>
+            </footer>
+        </div>
+    </div>
+
+    <div id="app-settings-modal" class="settings-modal">
+        <div class="settings-content">
+            <div class="modal-header pb-2 border-b border-gray-200 dark:border-[#333333]">
+                <span class="text-lg font-bold flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-emerald-500"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                    Configurações
+                </span>
+                <button id="close-app-settings-btn" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Opções de Tema -->
+            <div class="flex flex-col gap-2">
+                <span class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Aparência</span>
+                <div class="grid grid-cols-3 gap-2">
+                    <button data-theme-option="auto" class="theme-option-btn">
+                        <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                        <span class="text-xs">Automático</span>
+                    </button>
+                    <button data-theme-option="light" class="theme-option-btn">
+                        <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                        <span class="text-xs">Claro</span>
+                    </button>
+                    <button data-theme-option="dark" class="theme-option-btn">
+                        <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+                        <span class="text-xs">Escuro</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Configuração do Painel (Linhas/Colunas) -->
+    <div id="settings-modal" class="settings-modal">
+        <div class="settings-content">
+            <div class="modal-header">
+                <span>Editar Painel</span>
+                <button id="close-modal-button" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div class="edit-title-container">
+                <div class="panel-name-row">
+                    <span id="panel-name-display" class="panel-name-display uppercase"></span>
+                    <button id="edit-name-button" class="edit-pencil">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-edit"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                    </button>
+                    <input type="text" id="panel-name-edit-input" class="hidden border p-1 rounded bg-transparent border-gray-300 dark:border-[#555555]" />
+                </div>
+            </div>
+            <div class="modal-controls">
+                <div class="modal-control-row">
+                    <span>Linhas:</span>
+                    <div class="flex gap-2">
+                        <button id="remove-row-button" class="modal-control-button">-</button>
+                        <span id="rows-count">9</span>
+                        <button id="add-row-button" class="modal-control-button">+</button>
+                    </div>
+                </div>
+                <div class="modal-control-row">
+                    <span>Colunas:</span>
+                    <div class="flex gap-2">
+                        <button id="remove-col-button" class="modal-control-button">-</button>
+                        <span id="cols-count">4</span>
+                        <button id="add-col-button" class="modal-control-button">+</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="undo-toast" class="undo-toast" role="status" aria-live="polite">
+        <span id="undo-message"></span>
+        <button id="undo-button" type="button">DESFAZER</button>
+    </div>
+
+    <script>
+
+        // Impede zoom por gestos no navegador, mantendo a rolagem vertical.
+        function preventBrowserZoom(event) {
+            event.preventDefault();
+        }
+
+        document.addEventListener('gesturestart', preventBrowserZoom, { passive: false });
+        document.addEventListener('gesturechange', preventBrowserZoom, { passive: false });
+        document.addEventListener('gestureend', preventBrowserZoom, { passive: false });
+        document.addEventListener('touchstart', (event) => {
+            if (event.touches.length > 1) event.preventDefault();
+        }, { passive: false });
+        document.addEventListener('touchmove', (event) => {
+            if (event.touches.length > 1) event.preventDefault();
+        }, { passive: false });
+        window.addEventListener('wheel', (event) => {
+            if (event.ctrlKey) event.preventDefault();
+        }, { passive: false });
+        
+        const defaultPanelConfig = {
+            left: { name: 'ESQUERDA', rows: 9, cols: 4 },
+            center: { name: 'CENTRAL', rows: 9, cols: 8 },
+            right: { name: 'DIREITA', rows: 9, cols: 4 },
+            salaB: { name: 'SALA B', rows: 5, cols: 5 }
+        };
+
+        const storageKey = 'seatCounterState';
+        const panelConfigStorageKey = 'panelConfigState';
+        const themeStorageKey = 'appThemeState';
+
+        let isAdvancedShareMode = false;
+        let currentTheme = 'auto'; // 'auto', 'light', 'dark'
+        
+        let panelConfig = {};
+        
+        let appState = {
+            seats: {
+                left: [],
+                center: [],
+                right: [],
+                salaB: []
+            },
+            standCount: 0
+        };
+
+        let currentSectionId = null;
+        const LONG_PRESS_DURATION = 800;
+        const longPressTimers = new WeakMap();
+        const longPressStates = new WeakMap();
+        let undoSnapshot = null;
+        let undoTimeout = null;
+
+
+        function initTheme() {
+            try {
+                const savedTheme = localStorage.getItem(themeStorageKey) || 'auto';
+                applyTheme(savedTheme, false);
+            } catch (e) {
+                applyTheme('auto', false);
+            }
+
+            // Monitora mudanças no tema do SO quando em modo Automático
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+                if (currentTheme === 'auto') {
+                    updateSystemThemeDisplay(e.matches);
+                }
+            });
+        }
+
+        function applyTheme(theme, save = true) {
+            currentTheme = theme;
+            if (save) {
+                try {
+                    localStorage.setItem(themeStorageKey, theme);
+                } catch (e) {
+                    console.error("Erro ao salvar tema:", e);
+                }
+            }
+
+            let isDark = false;
+            if (theme === 'dark') {
+                isDark = true;
+            } else if (theme === 'light') {
+                isDark = false;
+            } else { // 'auto'
+                isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            }
+
+            updateSystemThemeDisplay(isDark);
+            updateThemeButtonsUI();
+        }
+
+        function updateSystemThemeDisplay(isDark) {
+            const metaColorScheme = document.getElementById('meta-color-scheme');
+            
+            if (isDark) {
+                document.documentElement.classList.add('dark');
+                document.body.classList.add('dark');
+                document.documentElement.style.setProperty('color-scheme', 'dark');
+                if (metaColorScheme) metaColorScheme.content = 'dark';
+            } else {
+                document.documentElement.classList.remove('dark');
+                document.body.classList.remove('dark');
+                // O valor 'only light' desativa o forçamento de modo escuro pelo navegador
+                document.documentElement.style.setProperty('color-scheme', 'only light');
+                if (metaColorScheme) metaColorScheme.content = 'only light';
+            }
+        }
+
+        function updateThemeButtonsUI() {
+            document.querySelectorAll('.theme-option-btn').forEach(btn => {
+                if (btn.dataset.themeOption === currentTheme) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+        }
+
+
+        function adjustContentPadding() {
+            const header = document.getElementById('main-header');
+            const actionBarContainer = document.getElementById('action-bar-container');
+            const content = document.getElementById('main-content');
+            if (header && actionBarContainer) {
+                actionBarContainer.style.marginTop = `${header.offsetHeight + 6}px`;
+            }
+            if (content) {
+                content.style.marginTop = '0px';
+            }
+        }
+        
+        function updateUI() {
+            document.querySelectorAll('.seat.selected').forEach(seat => {
+                seat.classList.remove('selected');
+            });
+
+            Object.keys(appState.seats).forEach(sectionId => {
+                const sectionElement = document.getElementById(`${sectionId}-seats`);
+                
+                if (sectionElement) {
+                    appState.seats[sectionId].forEach(({ row, col }) => {
+                        const seatRow = sectionElement.children[row];
+                        if (seatRow) {
+                            const seat = seatRow.children[col];
+                            if (seat) {
+                                seat.classList.add('selected');
+                            }
+                        }
+                    });
+                }
+            });
+
+            document.getElementById('stand-count-input').value = appState.standCount;
+            const leftSeats = appState.seats.left ? appState.seats.left.length : 0;
+            const centerSeats = appState.seats.center ? appState.seats.center.length : 0;
+            const rightSeats = appState.seats.right ? appState.seats.right.length : 0;
+            const salaBSeats = appState.seats.salaB ? appState.seats.salaB.length : 0;
+            const total = leftSeats + centerSeats + rightSeats + salaBSeats + appState.standCount;
+
+            document.getElementById('total-count').textContent = total;
+            document.getElementById('left-count').textContent = leftSeats;
+            document.getElementById('center-count').textContent = centerSeats;
+            document.getElementById('right-count').textContent = rightSeats;
+            document.getElementById('salaB-count').textContent = salaBSeats;
+
+            const pessoasText = total === 1 ? "PESSOA" : "PESSOAS";
+            document.querySelector('.summary-box p').innerHTML = `ASSISTÊNCIA: <span id="total-count">${total}</span> ${pessoasText}`;
+
+            const shareButton = document.getElementById('share-button');
+            const resetButton = document.getElementById('reset-button');
+            const occupyButton = document.getElementById('occupy-button');
+            const summaryBox = document.querySelector('.summary-box');
+
+            const totalOccupiedSeats = leftSeats + centerSeats + rightSeats + salaBSeats;
+            const totalCapacity = Object.values(panelConfig).reduce((acc, { rows, cols }) => acc + (rows * cols), 0);
+
+            if (total === 0) {
+                shareButton.disabled = true;
+                resetButton.disabled = true;
+                summaryBox.classList.add('zero-count');
+            } else {
+                shareButton.disabled = false;
+                resetButton.disabled = false;
+                summaryBox.classList.remove('zero-count');
+            }
+            occupyButton.disabled = totalOccupiedSeats === totalCapacity && appState.standCount === 0;
+            
+            if (isAdvancedShareMode) {
+                summaryBox.classList.add('advanced-share-mode');
+            } else {
+                summaryBox.classList.remove('advanced-share-mode');
+            }
+
+            document.getElementById('left-title').textContent = panelConfig.left.name;
+            document.getElementById('center-title').textContent = panelConfig.center.name;
+            document.getElementById('right-title').textContent = panelConfig.right.name;
+            document.getElementById('salaB-title').textContent = panelConfig.salaB.name;
+        }
+        
+        function createSeats(sectionId) {
+            const layout = panelConfig[sectionId];
+            const sectionElement = document.getElementById(`${sectionId}-seats`);
+            
+            if (!sectionElement || !layout) return;
+
+            sectionElement.innerHTML = '';
+            const { rows, cols } = layout;
+            for (let i = 0; i < rows; i++) {
+                const row = document.createElement('div');
+                row.className = 'seat-row';
+                for (let j = 0; j < cols; j++) {
+                    const seat = document.createElement('div');
+                    seat.className = 'seat';
+                    seat.innerHTML = `
+                        <svg class="checked-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="#10b981" stroke="#10b981" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                        </svg>
+                    `;
+                    seat.onclick = toggleSeat;
+                    seat.addEventListener('pointerdown', startSeatLongPress);
+                    seat.addEventListener('pointermove', trackSeatLongPress);
+                    seat.addEventListener('pointerup', finishSeatLongPress);
+                    seat.addEventListener('pointerleave', cancelSeatLongPress);
+                    seat.addEventListener('pointercancel', cancelSeatLongPress);
+                    seat.addEventListener('contextmenu', (event) => event.preventDefault());
+                    row.appendChild(seat);
+                }
+                sectionElement.appendChild(row);
+            }
+        }
+
+        function recreateAllSeats() {
+            createSeats('left');
+            createSeats('center');
+            createSeats('right');
+            createSeats('salaB');
+        }
+
+
+        function clearUndoToast() {
+            if (undoTimeout) {
+                clearTimeout(undoTimeout);
+                undoTimeout = null;
+            }
+            undoSnapshot = null;
+            const toast = document.getElementById('undo-toast');
+            if (toast) toast.classList.remove('show');
+        }
+
+        function showUndoToast(message, previousState) {
+            if (undoTimeout) clearTimeout(undoTimeout);
+
+            undoSnapshot = previousState;
+            const toast = document.getElementById('undo-toast');
+            const messageElement = document.getElementById('undo-message');
+
+            if (!toast || !messageElement) return;
+
+            messageElement.textContent = message;
+            toast.classList.add('show');
+            undoTimeout = setTimeout(() => {
+                clearUndoToast();
+            }, 5000);
+        }
+
+        function undoLastAction() {
+            if (!undoSnapshot) return;
+
+            const previousState = undoSnapshot;
+            clearUndoToast();
+            appState = previousState;
+            saveState();
+            updateUI();
+        }
+
+        function saveState() {
+            clearUndoToast();
+            try {
+                localStorage.setItem(storageKey, JSON.stringify(appState));
+                localStorage.setItem(panelConfigStorageKey, JSON.stringify(panelConfig));
+            } catch (e) {
+                console.error("Erro ao salvar estado no localStorage:", e);
+            }
+        }
+        
+        function loadState() {
+            try {
+                const savedState = localStorage.getItem(storageKey);
+                if (savedState) {
+                    const parsedState = JSON.parse(savedState);
+                    if (parsedState && parsedState.seats && typeof parsedState.standCount === 'number') {
+                        appState = parsedState;
+                    }
+                }
+                const savedConfig = localStorage.getItem(panelConfigStorageKey);
+                if (savedConfig) {
+                    const parsedConfig = JSON.parse(savedConfig);
+                    panelConfig = { ...defaultPanelConfig, ...parsedConfig };
+                } else {
+                    panelConfig = { ...defaultPanelConfig };
+                }
+            } catch (e) {
+                console.error("Erro ao carregar estado:", e);
+                panelConfig = { ...defaultPanelConfig };
+            }
+        }
+
+        document.getElementById('undo-button').addEventListener('click', undoLastAction);
+
+
+        function fillSeatsToLeft(seat) {
+            const sectionElement = seat.closest('.seat-section');
+            const seatGrid = sectionElement ? sectionElement.querySelector('.seat-grid') : null;
+            const sectionTitleElement = sectionElement
+                ? sectionElement.querySelector('.title-container span')
+                : null;
+            const sectionId = sectionTitleElement ? sectionTitleElement.dataset.section : null;
+
+            if (!sectionId || !seatGrid || !appState.seats[sectionId]) return;
+
+            const row = seat.parentElement;
+            const rowIndex = Array.from(seatGrid.children).indexOf(row);
+            const seatColIndex = Array.from(row.children).indexOf(seat);
+
+            if (rowIndex < 0 || seatColIndex < 0) return;
+
+            const occupiedSeats = new Set(
+                appState.seats[sectionId].map(({ row, col }) => `${row}:${col}`)
+            );
+            const seatsForFeedback = [];
+
+            for (let col = 0; col <= seatColIndex; col++) {
+                const seatKey = `${rowIndex}:${col}`;
+                if (!occupiedSeats.has(seatKey)) {
+                    appState.seats[sectionId].push({ row: rowIndex, col });
+                }
+                const visualSeat = row.children[col];
+                if (visualSeat) seatsForFeedback.push(visualSeat);
+            }
+
+            saveState();
+            updateUI();
+            seatsForFeedback.forEach((visualSeat) => {
+                visualSeat.classList.add('quick-filled');
+                setTimeout(() => visualSeat.classList.remove('quick-filled'), 450);
+            });
+        }
+
+        function startSeatLongPress(event) {
+            if (event.pointerType === 'mouse' && event.button !== 0) return;
+
+            const seat = event.currentTarget;
+            const row = seat.parentElement;
+            const seatColIndex = Array.from(row.children).indexOf(seat);
+            const totalSeatsToFill = seatColIndex + 1;
+
+            const state = {
+                startX: event.clientX,
+                startY: event.clientY,
+                triggered: false,
+                seats: []
+            };
+
+            // Identifica todos os assentos alvo e aplica configurações de delay em cascata
+            for (let i = 0; i <= seatColIndex; i++) {
+                const targetSeat = row.children[i];
+                targetSeat.classList.remove('quick-filled');
+                targetSeat.classList.add('long-pressing');
+                
+                // Duração dividida perfeitamente para criar efeito de barra contínua da esquerda pra direita
+                const duration = 650 / totalSeatsToFill;
+                const delay = 150 + (i * duration);
+                
+                targetSeat.style.setProperty('--lp-duration', `${duration}ms`);
+                targetSeat.style.setProperty('--lp-delay', `${delay}ms`);
+                
+                state.seats.push(targetSeat);
+            }
+
+            longPressStates.set(seat, state);
+            longPressTimers.set(seat, setTimeout(() => {
+                const currentState = longPressStates.get(seat);
+                if (!currentState) return;
+
+                currentState.triggered = true;
+                fillSeatsToLeft(seat);
+                
+                // Limpa propriedades de animação
+                currentState.seats.forEach(s => {
+                    s.classList.remove('long-pressing');
+                    s.style.removeProperty('--lp-duration');
+                    s.style.removeProperty('--lp-delay');
+                });
+            }, LONG_PRESS_DURATION));
+        }
+
+        function trackSeatLongPress(event) {
+            const seat = event.currentTarget;
+            const state = longPressStates.get(seat);
+            if (!state || state.triggered) return;
+
+            const distance = Math.hypot(
+                event.clientX - state.startX,
+                event.clientY - state.startY
+            );
+
+            if (distance > 10) {
+                cancelSeatLongPress(event);
+            }
+        }
+
+        function cleanupLongPressState(seat) {
+            const state = longPressStates.get(seat);
+            const timer = longPressTimers.get(seat);
+
+            if (timer) clearTimeout(timer);
+            longPressTimers.delete(seat);
+            longPressStates.delete(seat);
+
+            // Restaura o estado visual de todos os assentos envolvidos na barra de progresso
+            if (state && state.seats) {
+                state.seats.forEach(s => {
+                    s.classList.remove('long-pressing');
+                    s.style.removeProperty('--lp-duration');
+                    s.style.removeProperty('--lp-delay');
+                });
+            }
+            return state;
+        }
+
+        function finishSeatLongPress(event) {
+            const seat = event.currentTarget;
+            const state = cleanupLongPressState(seat);
+
+            if (state && state.triggered) {
+                seat.dataset.skipNextClick = 'true';
+                setTimeout(() => delete seat.dataset.skipNextClick, 0);
+            }
+        }
+
+        function cancelSeatLongPress(event) {
+            const seat = event.currentTarget;
+            const state = cleanupLongPressState(seat);
+
+            if (state && state.triggered) {
+                seat.dataset.skipNextClick = 'true';
+                setTimeout(() => delete seat.dataset.skipNextClick, 0);
+            }
+        }
+
+        function toggleSeat(event) {
+            const seat = event.target.closest('.seat');
+            if (!seat) return;
+
+            if (seat.dataset.skipNextClick === 'true') {
+                delete seat.dataset.skipNextClick;
+                return;
+            }
+            
+            const isSelected = seat.classList.contains('selected');
+            const sectionElement = seat.closest('.seat-section');
+            const sectionTitleElement = sectionElement.querySelector('.title-container span');
+            const sectionId = sectionTitleElement ? sectionTitleElement.dataset.section : null;
+
+            if (!sectionId) return;
+
+            const seatRowIndex = Array.from(seat.parentNode.parentNode.children).indexOf(seat.parentNode);
+            const seatColIndex = Array.from(seat.parentNode.children).indexOf(seat);
+            
+            if (isSelected) {
+                appState.seats[sectionId] = appState.seats[sectionId].filter(
+                    s => s.row !== seatRowIndex || s.col !== seatColIndex
+                );
+            } else {
+                appState.seats[sectionId].push({ row: seatRowIndex, col: seatColIndex });
+            }
+
+            saveState();
+            updateUI();
+        }
+
+
+        // Ocupar assentos
+        document.getElementById('occupy-button').addEventListener('click', () => {
+            const previousState = JSON.parse(JSON.stringify(appState));
+            Object.keys(panelConfig).forEach(sectionId => {
+                const { rows, cols } = panelConfig[sectionId];
+                appState.seats[sectionId] = [];
+                for (let r = 0; r < rows; r++) {
+                    for (let c = 0; c < cols; c++) {
+                        appState.seats[sectionId].push({ row: r, col: c });
+                    }
+                }
+            });
+            saveState();
+            updateUI();
+            showUndoToast('Todos os assentos ocupados.', previousState);
+        });
+
+        // Zerar tudo
+        document.getElementById('reset-button').addEventListener('click', () => {
+            const previousState = JSON.parse(JSON.stringify(appState));
+            Object.keys(appState.seats).forEach(key => appState.seats[key] = []);
+            appState.standCount = 0;
+            saveState();
+            updateUI();
+            showUndoToast('Assistência zerada.', previousState);
+        });
+
+        // Contagem em pé
+        document.getElementById('minus-button').addEventListener('click', () => {
+            if (appState.standCount > 0) {
+                appState.standCount--;
+                saveState();
+                updateUI();
+            }
+        });
+
+        document.getElementById('plus-button').addEventListener('click', () => {
+            appState.standCount++;
+            saveState();
+            updateUI();
+        });
+
+        document.getElementById('stand-count-input').addEventListener('change', (e) => {
+            const val = parseInt(e.target.value, 10);
+            appState.standCount = isNaN(val) || val < 0 ? 0 : val;
+            saveState();
+            updateUI();
+        });
+
+        const summaryBox = document.getElementById('summary-box');
+        if (summaryBox) {
+            summaryBox.addEventListener('dblclick', () => {
+                isAdvancedShareMode = !isAdvancedShareMode;
+                updateUI();
+            });
+        }
+
+        document.getElementById('share-button').addEventListener('click', () => {
+            const leftSeats = appState.seats.left ? appState.seats.left.length : 0;
+            const centerSeats = appState.seats.center ? appState.seats.center.length : 0;
+            const rightSeats = appState.seats.right ? appState.seats.right.length : 0;
+            const salaBSeats = appState.seats.salaB ? appState.seats.salaB.length : 0;
+            const total = leftSeats + centerSeats + rightSeats + salaBSeats + appState.standCount;
+
+            const today = new Date();
+            const day = String(today.getDate()).padStart(2, '0');
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const year = today.getFullYear();
+            const formattedDate = `${day}/${month}/${year}`;
+
+            const pessoasText = total === 1 ? "pessoa" : "pessoas";
+            let text = `${formattedDate}\nAssistência presencial: *${total} ${pessoasText}*`;
+
+            if (isAdvancedShareMode) {
+                text += `\n\n`;
+                if (leftSeats > 0) text += `• ${panelConfig.left.name}: ${leftSeats}\n`;
+                if (centerSeats > 0) text += `• ${panelConfig.center.name}: ${centerSeats}\n`;
+                if (rightSeats > 0) text += `• ${panelConfig.right.name}: ${rightSeats}\n`;
+                if (salaBSeats > 0) text += `• ${panelConfig.salaB.name}: ${salaBSeats}\n`;
+                if (appState.standCount > 0) text += `• EM PÉ: ${appState.standCount}\n`;
+            }
+
+            const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(text.trim())}`;
+            window.open(url, '_blank');
+        });
+
+
+        const appSettingsModal = document.getElementById('app-settings-modal');
+        const appSettingsBtn = document.getElementById('app-settings-btn');
+        const closeAppSettingsBtn = document.getElementById('close-app-settings-btn');
+
+        if (appSettingsBtn) {
+            appSettingsBtn.addEventListener('click', () => {
+                appSettingsModal.classList.add('show');
+            });
+        }
+
+        if (closeAppSettingsBtn) {
+            closeAppSettingsBtn.addEventListener('click', () => {
+                appSettingsModal.classList.remove('show');
+            });
+        }
+
+        // Event Listeners para Escolha de Tema
+        document.querySelectorAll('.theme-option-btn').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const selectedTheme = e.currentTarget.dataset.themeOption;
+                applyTheme(selectedTheme, true);
+            });
+        });
+
+
+        const settingsModal = document.getElementById('settings-modal');
+        const closeModalButton = document.getElementById('close-modal-button');
+        const panelNameDisplay = document.getElementById('panel-name-display');
+        const panelNameEditInput = document.getElementById('panel-name-edit-input');
+        const editNameButton = document.getElementById('edit-name-button');
+        const rowsCountSpan = document.getElementById('rows-count');
+        const colsCountSpan = document.getElementById('cols-count');
+
+        document.querySelectorAll('.settings-button').forEach(button => {
+            button.addEventListener('click', (e) => {
+                currentSectionId = e.currentTarget.dataset.section;
+                const config = panelConfig[currentSectionId];
+                
+                panelNameDisplay.textContent = config.name;
+                panelNameEditInput.value = config.name;
+                panelNameDisplay.classList.remove('hidden');
+                panelNameEditInput.classList.add('hidden');
+
+                rowsCountSpan.textContent = config.rows;
+                colsCountSpan.textContent = config.cols;
+
+                settingsModal.classList.add('show');
+            });
+        });
+
+        closeModalButton.addEventListener('click', () => {
+            settingsModal.classList.remove('show');
+        });
+
+        editNameButton.addEventListener('click', () => {
+            if (panelNameEditInput.classList.contains('hidden')) {
+                panelNameEditInput.classList.remove('hidden');
+                panelNameDisplay.classList.add('hidden');
+                panelNameEditInput.focus();
+            } else {
+                savePanelName();
+            }
+        });
+
+        panelNameEditInput.addEventListener('blur', () => {
+            savePanelName();
+        });
+
+        function savePanelName() {
+            const newName = panelNameEditInput.value.trim();
+            if (newName && currentSectionId) {
+                panelConfig[currentSectionId].name = newName.toUpperCase();
+                panelNameDisplay.textContent = panelConfig[currentSectionId].name;
+                saveState();
+                updateUI();
+            }
+            panelNameEditInput.classList.add('hidden');
+            panelNameDisplay.classList.remove('hidden');
+        }
+
+        document.getElementById('add-row-button').addEventListener('click', () => {
+            if (!currentSectionId) return;
+            panelConfig[currentSectionId].rows++;
+            rowsCountSpan.textContent = panelConfig[currentSectionId].rows;
+            recreateAllSeats();
+            saveState();
+            updateUI();
+        });
+
+        document.getElementById('remove-row-button').addEventListener('click', () => {
+            if (!currentSectionId || panelConfig[currentSectionId].rows <= 1) return;
+            panelConfig[currentSectionId].rows--;
+            rowsCountSpan.textContent = panelConfig[currentSectionId].rows;
+            appState.seats[currentSectionId] = appState.seats[currentSectionId].filter(
+                s => s.row < panelConfig[currentSectionId].rows
+            );
+            recreateAllSeats();
+            saveState();
+            updateUI();
+        });
+
+        document.getElementById('add-col-button').addEventListener('click', () => {
+            if (!currentSectionId) return;
+            panelConfig[currentSectionId].cols++;
+            colsCountSpan.textContent = panelConfig[currentSectionId].cols;
+            recreateAllSeats();
+            saveState();
+            updateUI();
+        });
+
+        document.getElementById('remove-col-button').addEventListener('click', () => {
+            if (!currentSectionId || panelConfig[currentSectionId].cols <= 1) return;
+            panelConfig[currentSectionId].cols--;
+            colsCountSpan.textContent = panelConfig[currentSectionId].cols;
+            appState.seats[currentSectionId] = appState.seats[currentSectionId].filter(
+                s => s.col < panelConfig[currentSectionId].cols
+            );
+            recreateAllSeats();
+            saveState();
+            updateUI();
+        });
+
+        // Carrega a versão do sw.js dinamicamente e exibe no rodapé
+        function loadVersionInFooter() {
+            fetch('/contador-assistencia/sw.js')
+                .then(response => response.text())
+                .then(text => {
+                    const match = text.match(/CACHE_NAME\s*=\s*['"]([^'"]+)['"]/);
+                    if (match && match[1]) {
+                        const fullCacheName = match[1];
+                        const versionMatch = fullCacheName.match(/v\d+\.\d+\.\d+/);
+                        const version = versionMatch ? versionMatch[0] : fullCacheName;
+                        const footerSpan = document.getElementById('footer-text');
+                        if (footerSpan) {
+                            footerSpan.textContent = `by macgldesign — ${version}`;
+                        }
+                    }
+                })
+                .catch(err => console.warn('Não foi possível carregar a versão dinamicamente:', err));
+        }
+
+
+        window.addEventListener('DOMContentLoaded', () => {
+            initTheme();
+            loadState();
+            recreateAllSeats();
+            updateUI();
+            adjustContentPadding();
+            loadVersionInFooter();
+        });
+
+        window.addEventListener('resize', adjustContentPadding);
+    </script>
+
+    <!-- Registro do Service Worker -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/contador-assistencia/sw.js')
+            .then(reg => {
+              console.log('Service Worker registrado!', reg);
+              reg.update();
+            })
+            .catch(err => console.error('Erro ao registrar Service Worker:', err));
+
+          let refreshing = false;
+          navigator.serviceWorker.addEventListener('controllerchange', () => {
+            if (!refreshing) {
+              refreshing = true;
+              window.location.reload();
+            }
+          });
+        });
+      }
+    </script>
+</body>
+</html>
