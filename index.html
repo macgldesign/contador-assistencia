@@ -923,7 +923,7 @@
         };
 
         let currentSectionId = null;
-        const LONG_PRESS_DURATION = 800;
+        const LONG_PRESS_DURATION = 800; // 150ms delay + 650ms animation = 800ms total
         const longPressTimers = new WeakMap();
         const longPressStates = new WeakMap();
         let undoSnapshot = null;
