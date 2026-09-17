@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
     <meta name="color-scheme" content="light dark" id="meta-color-scheme">
+    <meta name="theme-color" content="#f3f4f6" id="meta-theme-color">
     <link rel="manifest" href="manifest.json">
     <title>Contador de Assistência</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor'%3E%3Cpath d='M19 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2zM9.5 17L5 12.5l1.5-1.5L9.5 14l6-6L17 9.5l-7.5 7.5z'/%3E%3C/svg%3E">
@@ -16,6 +17,12 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         
+        html {
+            background-color: #f3f4f6;
+            color: #1f2937;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
         html, body {
             overflow-x: hidden;
             max-width: 100vw;
@@ -24,8 +31,8 @@
 
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6;
-            color: #1f2937;
+            background-color: inherit;
+            color: inherit;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -39,15 +46,20 @@
             transition: background-color 0.3s ease, color 0.3s ease;
         }
 
-        /* Suporte ao Tema Escuro */
+        /* Suporte ao Tema Escuro e Prevenção de Inversão Forçada no Samsung Internet / Chrome Mobile */
         :root {
             color-scheme: light dark;
+            supported-color-schemes: light dark;
         }
         html:not(.dark) {
             color-scheme: only light;
+            supported-color-schemes: light;
         }
         html.dark {
             color-scheme: dark;
+            supported-color-schemes: dark;
+            background-color: #121212;
+            color: #e5e5e5;
         }
 
         body.dark {
@@ -60,6 +72,7 @@
             user-select: text;
             -webkit-user-select: text;
         }
+
         .fixed-header {
             position: fixed;
             top: 0;
@@ -120,6 +133,7 @@
             flex-wrap: wrap;
             width: 100%;
         }
+
         .seat-section {
             position: relative;
             display: flex;
@@ -178,7 +192,6 @@
             border-color: #444444;
         }
 
-        /* Ajuste para telas pequenas mantendo ícones legíveis */
         @media (max-width: 420px) {
             .seat-section {
                 padding: 1rem 0.35rem;
@@ -334,7 +347,7 @@
         }
 
         .reset-button, .occupy-button, .share-button {
-            padding: 0.5rem 0.75rem; /* Margens laterais reduzidas de 1rem para 0.75rem */
+            padding: 0.5rem 0.75rem;
             color: #fff;
             font-weight: 600;
             border-radius: 0.5rem;
@@ -375,7 +388,6 @@
             color: #777777;
         }
 
-        /* Botão de Configurações Geral no canto direito da barra de ação */
         .app-settings-btn {
             position: absolute;
             right: 0.5rem;
@@ -465,7 +477,7 @@
             flex-direction: row;
             justify-content: center;
             align-items: center;
-            gap: 0.6rem; /* Gap levemente ajustado para encaixe harmônico */
+            gap: 0.6rem;
         }
         .mobile-layout {
             flex-direction: column;
@@ -766,7 +778,6 @@
                 </button>
             </div>
             
-            <!-- Botão de Configurações Geral do App (Canto direito, moderno, sem borda) -->
             <button id="app-settings-btn" class="app-settings-btn" title="Configurações do App" aria-label="Configurações do App">
                 <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="12" cy="12" r="3"></circle>
@@ -934,68 +945,35 @@
     </div>
 
     <script>
+        const LONG_PRESS_DURATION = 800;
+        const longPressStates = new Map();
+        const longPressTimers = new Map();
 
-        // Impede zoom por gestos no navegador, mantendo a rolagem vertical.
-        function preventBrowserZoom(event) {
-            event.preventDefault();
-        }
-
-        document.addEventListener('gesturestart', preventBrowserZoom, { passive: false });
-        document.addEventListener('gesturechange', preventBrowserZoom, { passive: false });
-        document.addEventListener('gestureend', preventBrowserZoom, { passive: false });
-        document.addEventListener('touchstart', (event) => {
-            if (event.touches.length > 1) event.preventDefault();
-        }, { passive: false });
-        document.addEventListener('touchmove', (event) => {
-            if (event.touches.length > 1) event.preventDefault();
-        }, { passive: false });
-        window.addEventListener('wheel', (event) => {
-            if (event.ctrlKey) event.preventDefault();
-        }, { passive: false });
-        
         const defaultPanelConfig = {
             left: { name: 'ESQUERDA', rows: 9, cols: 4 },
-            center: { name: 'CENTRAL', rows: 9, cols: 8 },
+            center: { name: 'CENTRAL', rows: 9, cols: 4 },
             right: { name: 'DIREITA', rows: 9, cols: 4 },
-            salaB: { name: 'SALA B', rows: 5, cols: 5 }
+            salaB: { name: 'SALA B', rows: 9, cols: 4 }
         };
 
-        const storageKey = 'seatCounterState';
-        const panelConfigStorageKey = 'panelConfigState';
-        const themeStorageKey = 'appThemeState';
-
-        let isAdvancedShareMode = false;
-        let currentTheme = 'auto'; // 'auto', 'light', 'dark'
-        
-        let panelConfig = {};
-        
+        let panelConfig = { ...defaultPanelConfig };
         let appState = {
-            seats: {
-                left: [],
-                center: [],
-                right: [],
-                salaB: []
-            },
+            seats: { left: [], center: [], right: [], salaB: [] },
             standCount: 0
         };
 
         let currentSectionId = null;
-        const LONG_PRESS_DURATION = 800;
-        const longPressTimers = new WeakMap();
-        const longPressStates = new WeakMap();
-        let undoSnapshot = null;
+        let isAdvancedShareMode = false;
         let undoTimeout = null;
+        let undoSnapshot = null;
 
+        const storageKey = 'attendanceCounterState';
+        const panelConfigStorageKey = 'attendanceCounterPanelConfig';
+
+        let currentTheme = localStorage.getItem('app-theme') || 'auto';
 
         function initTheme() {
-            try {
-                const savedTheme = localStorage.getItem(themeStorageKey) || 'auto';
-                applyTheme(savedTheme, false);
-            } catch (e) {
-                applyTheme('auto', false);
-            }
-
-            // Monitora mudanças no tema do SO quando em modo Automático
+            applyTheme(currentTheme, false);
             window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
                 if (currentTheme === 'auto') {
                     updateSystemThemeDisplay(e.matches);
@@ -1006,40 +984,36 @@
         function applyTheme(theme, save = true) {
             currentTheme = theme;
             if (save) {
-                try {
-                    localStorage.setItem(themeStorageKey, theme);
-                } catch (e) {
-                    console.error("Erro ao salvar tema:", e);
-                }
+                localStorage.setItem('app-theme', theme);
             }
-
+            
             let isDark = false;
-            if (theme === 'dark') {
-                isDark = true;
-            } else if (theme === 'light') {
-                isDark = false;
-            } else { // 'auto'
+            if (theme === 'auto') {
                 isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            } else {
+                isDark = (theme === 'dark');
             }
-
+            
             updateSystemThemeDisplay(isDark);
             updateThemeButtonsUI();
         }
 
         function updateSystemThemeDisplay(isDark) {
             const metaColorScheme = document.getElementById('meta-color-scheme');
+            const metaThemeColor = document.getElementById('meta-theme-color');
             
             if (isDark) {
                 document.documentElement.classList.add('dark');
                 document.body.classList.add('dark');
                 document.documentElement.style.setProperty('color-scheme', 'dark');
                 if (metaColorScheme) metaColorScheme.content = 'dark';
+                if (metaThemeColor) metaThemeColor.content = '#121212';
             } else {
                 document.documentElement.classList.remove('dark');
                 document.body.classList.remove('dark');
-                // O valor 'only light' desativa o forçamento de modo escuro pelo navegador
                 document.documentElement.style.setProperty('color-scheme', 'only light');
                 if (metaColorScheme) metaColorScheme.content = 'only light';
+                if (metaThemeColor) metaThemeColor.content = '#f3f4f6';
             }
         }
 
@@ -1052,7 +1026,6 @@
                 }
             });
         }
-
 
         function adjustContentPadding() {
             const header = document.getElementById('main-header');
@@ -1133,7 +1106,7 @@
             document.getElementById('right-title').textContent = panelConfig.right.name;
             document.getElementById('salaB-title').textContent = panelConfig.salaB.name;
         }
-        
+
         function createSeats(sectionId) {
             const layout = panelConfig[sectionId];
             const sectionElement = document.getElementById(`${sectionId}-seats`);
@@ -1172,7 +1145,6 @@
             createSeats('right');
             createSeats('salaB');
         }
-
 
         function clearUndoToast() {
             if (undoTimeout) {
@@ -1242,9 +1214,6 @@
             }
         }
 
-        document.getElementById('undo-button').addEventListener('click', undoLastAction);
-
-
         function fillSeatsToLeft(seat) {
             const sectionElement = seat.closest('.seat-section');
             const seatGrid = sectionElement ? sectionElement.querySelector('.seat-grid') : null;
@@ -1298,13 +1267,11 @@
                 seats: []
             };
 
-            // Identifica todos os assentos alvo e aplica configurações de delay em cascata
             for (let i = 0; i <= seatColIndex; i++) {
                 const targetSeat = row.children[i];
                 targetSeat.classList.remove('quick-filled');
                 targetSeat.classList.add('long-pressing');
                 
-                // Duração dividida perfeitamente para criar efeito de barra contínua da esquerda pra direita
                 const duration = 650 / totalSeatsToFill;
                 const delay = 150 + (i * duration);
                 
@@ -1322,7 +1289,6 @@
                 currentState.triggered = true;
                 fillSeatsToLeft(seat);
                 
-                // Limpa propriedades de animação
                 currentState.seats.forEach(s => {
                     s.classList.remove('long-pressing');
                     s.style.removeProperty('--lp-duration');
@@ -1354,7 +1320,6 @@
             longPressTimers.delete(seat);
             longPressStates.delete(seat);
 
-            // Restaura o estado visual de todos os assentos envolvidos na barra de progresso
             if (state && state.seats) {
                 state.seats.forEach(s => {
                     s.classList.remove('long-pressing');
@@ -1416,8 +1381,8 @@
             updateUI();
         }
 
+        document.getElementById('undo-button').addEventListener('click', undoLastAction);
 
-        // Ocupar assentos
         document.getElementById('occupy-button').addEventListener('click', () => {
             const previousState = JSON.parse(JSON.stringify(appState));
             Object.keys(panelConfig).forEach(sectionId => {
@@ -1434,7 +1399,6 @@
             showUndoToast('Todos os assentos ocupados.', previousState);
         });
 
-        // Zerar tudo
         document.getElementById('reset-button').addEventListener('click', () => {
             const previousState = JSON.parse(JSON.stringify(appState));
             Object.keys(appState.seats).forEach(key => appState.seats[key] = []);
@@ -1444,7 +1408,6 @@
             showUndoToast('Assistência zerada.', previousState);
         });
 
-        // Contagem em pé
         document.getElementById('minus-button').addEventListener('click', () => {
             if (appState.standCount > 0) {
                 appState.standCount--;
@@ -1503,7 +1466,6 @@
             window.open(url, '_blank');
         });
 
-
         const appSettingsModal = document.getElementById('app-settings-modal');
         const appSettingsBtn = document.getElementById('app-settings-btn');
         const closeAppSettingsBtn = document.getElementById('close-app-settings-btn');
@@ -1520,14 +1482,12 @@
             });
         }
 
-        // Event Listeners para Escolha de Tema
         document.querySelectorAll('.theme-option-btn').forEach(button => {
             button.addEventListener('click', (e) => {
                 const selectedTheme = e.currentTarget.dataset.themeOption;
                 applyTheme(selectedTheme, true);
             });
         });
-
 
         const settingsModal = document.getElementById('settings-modal');
         const closeModalButton = document.getElementById('close-modal-button');
@@ -1626,7 +1586,6 @@
             updateUI();
         });
 
-        // Carrega a versão do sw.js dinamicamente e exibe no rodapé
         function loadVersionInFooter() {
             fetch('/contador-assistencia/sw.js')
                 .then(response => response.text())
@@ -1644,7 +1603,6 @@
                 })
                 .catch(err => console.warn('Não foi possível carregar a versão dinamicamente:', err));
         }
-
 
         window.addEventListener('DOMContentLoaded', () => {
             initTheme();
