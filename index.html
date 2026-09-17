@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0, minimum-scale=1.0">
     <meta name="color-scheme" content="light dark" id="meta-color-scheme">
     <meta name="theme-color" content="#f3f4f6" id="meta-theme-color">
     <link rel="manifest" href="manifest.json">
@@ -21,12 +21,23 @@
             background-color: #f3f4f6;
             color: #1f2937;
             transition: background-color 0.3s ease, color 0.3s ease;
+            touch-action: manipulation;
+            -webkit-text-size-adjust: 100%;
+            text-size-adjust: 100%;
+            -webkit-user-select: none;
+            user-select: none;
         }
 
         html, body {
             overflow-x: hidden;
             max-width: 100vw;
-            touch-action: pan-y;
+            touch-action: manipulation;
+            -webkit-text-size-adjust: 100%;
+            text-size-adjust: 100%;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+            overscroll-behavior-y: none;
         }
 
         body {
@@ -39,10 +50,6 @@
             min-height: 100vh;
             margin: 0;
             padding: 0;
-            user-select: none;
-            -webkit-user-select: none;
-            -webkit-touch-callout: none;
-            touch-action: pan-y;
             transition: background-color 0.3s ease, color 0.3s ease;
         }
 
@@ -53,6 +60,7 @@
         html:not(.dark) {
             color-scheme: only light;
             supported-color-schemes: light;
+            background-color: #f3f4f6;
         }
         html.dark {
             color-scheme: dark;
@@ -247,7 +255,7 @@
             background-color: rgba(16, 185, 129, 0.45);
             transform: scaleX(0);
             transform-origin: left center;
-            animation: long-press-progress var(--lp-duration, 150ms) linear var(--lp-delay, 0ms) both;
+            animation: long-press-progress var(--lp-duration, 650ms) linear var(--lp-delay, 0ms) both;
             pointer-events: none;
             z-index: 0;
         }
@@ -891,8 +899,8 @@
                         <span class="text-xs">Escuro</span>
                     </button>
                 </div>
-                <p class="text-[11px] text-gray-400 dark:text-gray-500 mt-1 leading-tight">
-                    Nota: O tema do navegador padrão (como modo escuro do Samsung Internet ou Chrome) pode afetar o tema do aplicativo.
+                <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-1 leading-tight">
+                    O tema do navegador padrão pode afetar o tema do aplicativo.
                 </p>
             </div>
 
@@ -954,9 +962,11 @@
     </div>
 
     <script>
-        const LONG_PRESS_DURATION = 800;
+        const HOLD_TRIGGER_DELAY = 150; // Tempo de espera inicial
+        const TOTAL_LONG_PRESS_TIME = 800; // Tempo total incluindo espera (150ms delay + 650ms animação)
         const longPressStates = new Map();
         const longPressTimers = new Map();
+        const holdDelayTimers = new Map();
 
         const defaultPanelConfig = {
             left: { name: 'ESQUERDA', rows: 9, cols: 4 },
@@ -1276,40 +1286,53 @@
                 seats: []
             };
 
+            const seatList = [];
             for (let i = 0; i <= seatColIndex; i++) {
-                const targetSeat = row.children[i];
-                targetSeat.classList.remove('quick-filled');
-                targetSeat.classList.add('long-pressing');
-                
-                const duration = LONG_PRESS_DURATION / totalSeatsToFill;
-                const delay = i * duration;
-                
-                targetSeat.style.setProperty('--lp-duration', `${duration}ms`);
-                targetSeat.style.setProperty('--lp-delay', `${delay}ms`);
-                
-                state.seats.push(targetSeat);
+                seatList.push(row.children[i]);
             }
-
+            state.seats = seatList;
             longPressStates.set(seat, state);
-            longPressTimers.set(seat, setTimeout(() => {
+
+            const holdTimer = setTimeout(() => {
                 const currentState = longPressStates.get(seat);
                 if (!currentState) return;
 
-                currentState.triggered = true;
-                fillSeatsToLeft(seat);
-                
-                currentState.seats.forEach(s => {
-                    s.classList.remove('long-pressing');
-                    s.style.removeProperty('--lp-duration');
-                    s.style.removeProperty('--lp-delay');
+                seatList.forEach((targetSeat, i) => {
+                    targetSeat.classList.remove('quick-filled');
+                    targetSeat.classList.add('long-pressing');
+                    
+                    const animationDuration = TOTAL_LONG_PRESS_TIME - HOLD_TRIGGER_DELAY; // 650ms
+                    const duration = animationDuration / totalSeatsToFill;
+                    const delay = i * duration;
+                    
+                    targetSeat.style.setProperty('--lp-duration', `${duration}ms`);
+                    targetSeat.style.setProperty('--lp-delay', `${delay}ms`);
                 });
-            }, LONG_PRESS_DURATION));
+
+                const triggerTimer = setTimeout(() => {
+                    const st = longPressStates.get(seat);
+                    if (!st) return;
+
+                    st.triggered = true;
+                    fillSeatsToLeft(seat);
+                    
+                    seatList.forEach(s => {
+                        s.classList.remove('long-pressing');
+                        s.style.removeProperty('--lp-duration');
+                        s.style.removeProperty('--lp-delay');
+                    });
+                }, TOTAL_LONG_PRESS_TIME - HOLD_TRIGGER_DELAY);
+
+                longPressTimers.set(seat, triggerTimer);
+            }, HOLD_TRIGGER_DELAY);
+
+            holdDelayTimers.set(seat, holdTimer);
         }
 
         function trackSeatLongPress(event) {
             const seat = event.currentTarget;
             const state = longPressStates.get(seat);
-            if (!state || state.triggered) return;
+            if (!state) return;
 
             const distance = Math.hypot(
                 event.clientX - state.startX,
@@ -1322,6 +1345,12 @@
         }
 
         function cleanupLongPressState(seat) {
+            const holdTimer = holdDelayTimers.get(seat);
+            if (holdTimer) {
+                clearTimeout(holdTimer);
+                holdDelayTimers.delete(seat);
+            }
+
             const state = longPressStates.get(seat);
             const timer = longPressTimers.get(seat);
 
@@ -1606,6 +1635,25 @@
             saveState();
             updateUI();
         });
+
+        document.addEventListener('gesturestart', function (e) {
+            e.preventDefault();
+        });
+        document.addEventListener('gesturechange', function (e) {
+            e.preventDefault();
+        });
+        document.addEventListener('gestureend', function (e) {
+            e.preventDefault();
+        });
+
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', function (event) {
+            const now = (new Date()).getTime();
+            if (now - lastTouchEnd <= 300) {
+                event.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, { passive: false });
 
         window.addEventListener('DOMContentLoaded', () => {
             initTheme();
