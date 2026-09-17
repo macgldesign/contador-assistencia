@@ -200,41 +200,32 @@
         .seat:hover {
             box-shadow: 0 0 0 2px #d1d5db;
         }
-        .seat-row.long-pressing-row::after {
+        .seat.long-pressing::after {
             content: '';
             position: absolute;
             top: 0;
-            left: var(--long-press-left);
-            width: var(--long-press-width);
+            left: 0;
+            width: 100%;
             height: 100%;
-            border-radius: 0.5rem;
             background-color: rgba(16, 185, 129, 0.35);
             transform: scaleX(0);
             transform-origin: left center;
-            animation: long-press-progress 650ms linear 150ms both;
-            pointer-events: none;
-            z-index: 2;
-        }
-        .seat-row.long-pressing-row .seat {
+            animation: seat-fill-progress var(--fill-duration) linear var(--fill-delay) both;
             z-index: 1;
+            pointer-events: none;
         }
-        .seat-row.long-pressing-row .seat svg {
+        .seat.long-pressing svg {
             position: relative;
-            z-index: 3;
+            z-index: 2;
         }
         .seat.quick-filled {
             animation: quick-fill-feedback 450ms ease-out;
         }
-        @keyframes long-press-progress {
+        @keyframes seat-fill-progress {
             0% {
-                opacity: 0;
                 transform: scaleX(0);
             }
-            1% {
-                opacity: 1;
-            }
-            to {
-                opacity: 1;
+            100% {
                 transform: scaleX(1);
             }
         }
@@ -1250,10 +1241,12 @@
         }
 
         function clearLongPressVisual(state) {
-            if (state && state.row) {
-                state.row.classList.remove('long-pressing-row');
-                state.row.style.removeProperty('--long-press-left');
-                state.row.style.removeProperty('--long-press-width');
+            if (state && state.seatsToAnimate) {
+                state.seatsToAnimate.forEach(seat => {
+                    seat.classList.remove('long-pressing');
+                    seat.style.removeProperty('--fill-duration');
+                    seat.style.removeProperty('--fill-delay');
+                });
             }
         }
 
@@ -1263,23 +1256,31 @@
             const seat = event.currentTarget;
             const row = seat.parentElement;
             const seatColIndex = Array.from(row.children).indexOf(seat);
-            const firstSeat = row.children[0];
-            if (!firstSeat || seatColIndex < 0) return;
+            if (seatColIndex < 0) return;
 
-            const rowRect = row.getBoundingClientRect();
-            const firstSeatRect = firstSeat.getBoundingClientRect();
-            const targetSeatRect = seat.getBoundingClientRect();
+            const seatsToAnimate = [];
+            for (let i = 0; i <= seatColIndex; i++) {
+                seatsToAnimate.push(row.children[i]);
+            }
+
             const state = {
                 startX: event.clientX,
                 startY: event.clientY,
                 triggered: false,
-                row
+                seatsToAnimate
             };
 
-            seat.classList.remove('quick-filled');
-            row.style.setProperty('--long-press-left', `${firstSeatRect.left - rowRect.left}px`);
-            row.style.setProperty('--long-press-width', `${targetSeatRect.right - firstSeatRect.left}px`);
-            row.classList.add('long-pressing-row');
+            const totalAnimationTime = 650; // Tempo total da animação (sem o delay)
+            const initialDelay = 150;       // Espera inicial antes de começar a encher
+            const timePerSeat = totalAnimationTime / seatsToAnimate.length;
+
+            seatsToAnimate.forEach((s, index) => {
+                s.classList.remove('quick-filled');
+                s.style.setProperty('--fill-duration', `${timePerSeat}ms`);
+                s.style.setProperty('--fill-delay', `${initialDelay + (index * timePerSeat)}ms`);
+                s.classList.add('long-pressing');
+            });
+
             longPressStates.set(seat, state);
             longPressTimers.set(seat, setTimeout(() => {
                 const currentState = longPressStates.get(seat);
