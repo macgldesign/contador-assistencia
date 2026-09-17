@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <meta name="color-scheme" content="light dark" id="meta-color-scheme">
     <link rel="manifest" href="manifest.json">
     <title>Contador de Assistência</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor'%3E%3Cpath d='M19 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2zM9.5 17L5 12.5l1.5-1.5L9.5 14l6-6L17 9.5l-7.5 7.5z'/%3E%3C/svg%3E">
@@ -191,13 +192,11 @@
             border-color: #10b981;
         }
 
-        .seat .unchecked-icon,
-        .seat.selected .checked-icon {
-            display: block;
-        }
-        .seat.selected .unchecked-icon,
         .seat .checked-icon {
             display: none;
+        }
+        .seat.selected .checked-icon {
+            display: block;
         }
         .seat svg {
             width: 85%;
@@ -206,14 +205,6 @@
             stroke: #fff;
             stroke-width: 2.5;
             transition: all 0.2s ease-in-out;
-        }
-
-        .seat .unchecked-icon {
-            stroke: #9ca3af;
-        }
-
-        body.dark .seat .unchecked-icon {
-            stroke: #6b7280;
         }
 
         .seat:hover {
@@ -1027,9 +1018,15 @@
 
         function updateSystemThemeDisplay(isDark) {
             if (isDark) {
+                document.documentElement.classList.add('dark');
                 document.body.classList.add('dark');
             } else {
+                document.documentElement.classList.remove('dark');
                 document.body.classList.remove('dark');
+            }
+            const metaColorScheme = document.getElementById('meta-color-scheme');
+            if (metaColorScheme) {
+                metaColorScheme.content = isDark ? 'dark' : 'light';
             }
         }
 
@@ -1139,9 +1136,6 @@
                     const seat = document.createElement('div');
                     seat.className = 'seat';
                     seat.innerHTML = `
-                        <svg class="unchecked-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
-                        </svg>
                         <svg class="checked-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="#10b981" stroke="#10b981" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
                         </svg>
