@@ -6,10 +6,10 @@
     <link rel="manifest" href="manifest.json">
     <title>Contador de Assistência</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor'%3E%3Cpath d='M19 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2zM9.5 17L5 12.5l1.5-1.5L9.5 14l6-6L17 9.5l-7.5 7.5z'/%3E%3C/svg%3E">
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-
         html {
             color-scheme: light;
         }
@@ -682,23 +682,290 @@
         .edit-pencil:hover {
             color: #4b5563;
         }
+        /* --- Desfazer em vários níveis (botão à esquerda, espelhando a engrenagem) --- */
+        .app-undo-button {
+            position: absolute;
+            top: 50%;
+            left: 0.5rem;
+            width: 40px;
+            height: 40px;
+            padding: 0.5rem;
+            color: #6b7280;
+            background: transparent;
+            border: none;
+            box-shadow: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transform: translateY(-50%);
+            transition: color 0.2s, background-color 0.2s, opacity 0.2s;
+        }
+
+        .app-undo-button:hover:not(:disabled) {
+            color: #374151;
+            background-color: rgba(107, 114, 128, 0.1);
+        }
+
+        .app-undo-button:disabled {
+            opacity: 0.35;
+            cursor: default;
+        }
+
+        .app-undo-button:focus-visible {
+            outline: 2px solid #10b981;
+            outline-offset: 2px;
+        }
+
+        .app-undo-button svg {
+            width: 27px;
+            height: 27px;
+        }
+
+        html[data-theme="dark"] .app-undo-button {
+            color: #a1a1aa;
+        }
+
+        html[data-theme="dark"] .app-undo-button:hover:not(:disabled) {
+            color: #f4f4f5;
+            background-color: rgba(161, 161, 170, 0.14);
+        }
+
+        /* --- Preferências (interruptores) --- */
+        .app-settings-content {
+            max-height: calc(100vh - 2rem);
+            overflow-y: auto;
+        }
+
+        .setting-rows {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .setting-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        .setting-title {
+            display: block;
+            color: #374151;
+            font-weight: 600;
+        }
+
+        .setting-hint {
+            display: block;
+            margin-top: 0.15rem;
+            color: #6b7280;
+            font-size: 0.75rem;
+            line-height: 1.35;
+        }
+
+        .switch {
+            position: relative;
+            flex: none;
+            width: 46px;
+            height: 28px;
+            padding: 0;
+            background: #d1d5db;
+            border: none;
+            border-radius: 999px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .switch::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 22px;
+            height: 22px;
+            background: #fff;
+            border-radius: 50%;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+            transition: transform 0.2s;
+        }
+
+        .switch[aria-checked="true"] {
+            background: #10b981;
+        }
+
+        .switch[aria-checked="true"]::after {
+            transform: translateX(18px);
+        }
+
+        .switch:focus-visible {
+            outline: 2px solid #10b981;
+            outline-offset: 2px;
+        }
+
+        html[data-theme="dark"] .setting-title {
+            color: #e4e4e7;
+        }
+
+        html[data-theme="dark"] .setting-hint {
+            color: #a1a1aa;
+        }
+
+        html[data-theme="dark"] .switch {
+            background: #52525b;
+        }
+
+        html[data-theme="dark"] .switch[aria-checked="true"] {
+            background: #10b981;
+        }
+
+        /* --- Acessibilidade: foco por teclado nos assentos --- */
+        .seat:focus-visible {
+            outline: 2px solid #10b981;
+            outline-offset: 2px;
+        }
+
+        /* --- Acessibilidade: respeita "reduzir movimento" do sistema --- */
+        @keyframes seat-hold-tint {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .seat,
+            .seat svg,
+            .switch::after {
+                transition: none;
+            }
+
+            .seat.quick-filled {
+                animation: none;
+            }
+
+            /* Sem varredura: o assento só ganha o realce no momento certo do toque longo */
+            .seat.long-pressing::after {
+                transform: none;
+                animation: seat-hold-tint 1ms linear var(--fill-delay) both;
+            }
+
+            .undo-toast {
+                transform: translate(-50%, 0);
+                transition: opacity 0.15s ease;
+            }
+        }
+
         .hidden {
             display: none !important;
+        }
+    </style>
+    <style>
+        /* ===== Base + utilitários (substituem o Tailwind via CDN) =====
+           Gerado com Tailwind v3.4 apenas com as classes usadas neste arquivo.
+           Fica DEPOIS do CSS do app, como o CDN fazia, para manter a mesma precedência. */
+        *,:after,:before { box-sizing:border-box; border:0 solid #e5e7eb; }
+        :after,:before { --tw-content:""; }
+        :host,html { line-height:1.5; -webkit-text-size-adjust:100%; -moz-tab-size:4; -o-tab-size:4; tab-size:4; font-family:ui-sans-serif,system-ui,sans-serif,Apple Color Emoji,Segoe UI Emoji,Segoe UI Symbol,Noto Color Emoji; font-feature-settings:normal; font-variation-settings:normal; -webkit-tap-highlight-color:transparent; }
+        body { margin:0; line-height:inherit; }
+        hr { height:0; color:inherit; border-top-width:1px; }
+        abbr:where([title]) { -webkit-text-decoration:underline dotted; text-decoration:underline dotted; }
+        h1,h2,h3,h4,h5,h6 { font-size:inherit; font-weight:inherit; }
+        a { color:inherit; text-decoration:inherit; }
+        b,strong { font-weight:bolder; }
+        code,kbd,pre,samp { font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,Liberation Mono,Courier New,monospace; font-feature-settings:normal; font-variation-settings:normal; font-size:1em; }
+        small { font-size:80%; }
+        sub,sup { font-size:75%; line-height:0; position:relative; vertical-align:baseline; }
+        sub { bottom:-.25em; }
+        sup { top:-.5em; }
+        table { text-indent:0; border-color:inherit; border-collapse:collapse; }
+        button,input,optgroup,select,textarea { font-family:inherit; font-feature-settings:inherit; font-variation-settings:inherit; font-size:100%; font-weight:inherit; line-height:inherit; letter-spacing:inherit; color:inherit; margin:0; padding:0; }
+        button,select { text-transform:none; }
+        button,input:where([type=button]),input:where([type=reset]),input:where([type=submit]) { -webkit-appearance:button; background-color:transparent; background-image:none; }
+        :-moz-focusring { outline:auto; }
+        :-moz-ui-invalid { box-shadow:none; }
+        progress { vertical-align:baseline; }
+        ::-webkit-inner-spin-button,::-webkit-outer-spin-button { height:auto; }
+        [type=search] { -webkit-appearance:textfield; outline-offset:-2px; }
+        ::-webkit-search-decoration { -webkit-appearance:none; }
+        ::-webkit-file-upload-button { -webkit-appearance:button; font:inherit; }
+        summary { display:list-item; }
+        blockquote,dd,dl,figure,h1,h2,h3,h4,h5,h6,hr,p,pre { margin:0; }
+        fieldset { margin:0; }
+        fieldset,legend { padding:0; }
+        menu,ol,ul { list-style:none; margin:0; padding:0; }
+        dialog { padding:0; }
+        textarea { resize:vertical; }
+        input::-moz-placeholder,textarea::-moz-placeholder { opacity:1; color:#9ca3af; }
+        input::placeholder,textarea::placeholder { opacity:1; color:#9ca3af; }
+        [role=button],button { cursor:pointer; }
+        :disabled { cursor:default; }
+        audio,canvas,embed,iframe,img,object,svg,video { display:block; vertical-align:middle; }
+        img,video { max-width:100%; height:auto; }
+        [hidden]:where(:not([hidden=until-found])) { display:none; }
+        .container { width:100%; }
+        @media (min-width:640px) {
+            .container { max-width:640px; }
+        }
+        @media (min-width:768px) {
+            .container { max-width:768px; }
+        }
+        @media (min-width:1024px) {
+            .container { max-width:1024px; }
+        }
+        @media (min-width:1280px) {
+            .container { max-width:1280px; }
+        }
+        @media (min-width:1536px) {
+            .container { max-width:1536px; }
+        }
+        .mb-4 { margin-bottom:1rem; }
+        .mt-2 { margin-top:.5rem; }
+        .flex { display:flex; }
+        .hidden { display:none; }
+        .h-6 { height:1.5rem; }
+        .min-h-screen { min-height:100vh; }
+        .w-6 { width:1.5rem; }
+        .w-full { width:100%; }
+        .flex-col { flex-direction:column; }
+        .items-center { align-items:center; }
+        .justify-start { justify-content:flex-start; }
+        .gap-2 { gap:.5rem; }
+        .rounded { border-radius:.25rem; }
+        .border { border-width:1px; }
+        .bg-gray-100 { --tw-bg-opacity:1; background-color:rgb(243 244 246/var(--tw-bg-opacity,1)); }
+        .p-1 { padding:.25rem; }
+        .text-center { text-align:center; }
+        .text-xl { font-size:1.25rem; line-height:1.75rem; }
+        .font-semibold { font-weight:600; }
+        .uppercase { text-transform:uppercase; }
+        .text-gray-400 { --tw-text-opacity:1; color:rgb(156 163 175/var(--tw-text-opacity,1)); }
+        .hover\:text-gray-600:hover { --tw-text-opacity:1; color:rgb(75 85 99/var(--tw-text-opacity,1)); }
+        @media (min-width:1024px) {
+            .lg\:flex-row { flex-direction:row; }
+            .lg\:items-start { align-items:flex-start; }
+            .lg\:justify-center { justify-content:center; }
+            .lg\:gap-8 { gap:2rem; }
         }
     </style>
 </head>
 <body class="bg-gray-100 flex items-center justify-start min-h-screen">
     
     <header class="fixed-header" id="main-header">
-        <div class="summary-box" id="summary-box">
+        <div class="summary-box" id="summary-box" role="status" aria-live="polite" aria-atomic="true">
             <p>ASSISTÊNCIA: <span id="total-count">0</span> PESSOAS</p>
         </div>
     </header>
 
     <div class="flex-row-center mt-2 scrolling-actions" id="action-bar">
+        <button id="history-undo-button" class="app-undo-button" type="button" aria-label="Desfazer última ação" title="Desfazer" disabled>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="9 14 4 9 9 4"></polyline>
+                <path d="M20 20v-7a4 4 0 0 0-4-4H4"></path>
+            </svg>
+        </button>
         <button id="reset-button" class="reset-button">ZERAR</button>
         <button id="occupy-button" class="occupy-button">OCUPAR</button>
-        <button id="share-button" class="share-button" disabled>
+        <button id="share-button" class="share-button" type="button" aria-label="Compartilhar no WhatsApp" title="Compartilhar no WhatsApp" disabled>
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-share-2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
         </button>
         <button id="app-settings-button" class="app-settings-button" type="button" aria-label="Configurações" title="Configurações">
@@ -715,7 +982,7 @@
             <div class="stage mobile-layout lg:flex-row lg:items-start lg:gap-8">
 
                 <!-- Painel Esquerda -->
-                <div class="seat-section">
+                <div class="seat-section" role="group" aria-labelledby="left-title">
                     <div class="title-container">
                         <span class="panel-title uppercase" id="left-title" data-section="left">ESQUERDA</span>
                         <button class="settings-button" data-section="left">
@@ -729,7 +996,7 @@
                 </div>
     
                 <!-- Painel Central -->
-                <div class="seat-section">
+                <div class="seat-section" role="group" aria-labelledby="center-title">
                     <div class="title-container">
                         <span class="panel-title uppercase" id="center-title" data-section="center">CENTRAL</span>
                         <button class="settings-button" data-section="center">
@@ -743,7 +1010,7 @@
                 </div>
     
                 <!-- Painel Direita -->
-                <div class="seat-section">
+                <div class="seat-section" role="group" aria-labelledby="right-title">
                     <div class="title-container">
                         <span class="panel-title uppercase" id="right-title" data-section="right">DIREITA</span>
                         <button class="settings-button" data-section="right">
@@ -757,7 +1024,7 @@
                 </div>
                 
                 <!-- Painel Sala B -->
-                <div class="seat-section">
+                <div class="seat-section" role="group" aria-labelledby="salaB-title">
                     <div class="title-container">
                         <span class="panel-title uppercase" id="salaB-title" data-section="salaB">SALA B</span>
                         <button class="settings-button" data-section="salaB">
@@ -770,12 +1037,12 @@
                     </div>
                 </div>
 
-                <div class="stand-count-section">
-                    <h2 class="text-xl font-semibold text-center">EM PÉ</h2>
+                <div class="stand-count-section" role="group" aria-labelledby="stand-title">
+                    <h2 id="stand-title" class="text-xl font-semibold text-center">EM PÉ</h2>
                     <div class="stand-count-controls">
-                        <button id="minus-button" class="stand-count-button">-</button>
-                        <input type="text" id="stand-count-input" class="stand-count-input" value="0">
-                        <button id="plus-button" class="stand-count-button">+</button>
+                        <button id="minus-button" class="stand-count-button" type="button" aria-label="Remover uma pessoa em pé">-</button>
+                        <input type="text" id="stand-count-input" class="stand-count-input" value="0" inputmode="numeric" aria-label="Pessoas em pé">
+                        <button id="plus-button" class="stand-count-button" type="button" aria-label="Adicionar uma pessoa em pé">+</button>
                     </div>
                 </div>
             </div>
@@ -787,9 +1054,9 @@
 
     <!-- Modal de Configuração -->
     <div id="settings-modal" class="settings-modal">
-        <div class="settings-content">
+        <div class="settings-content" role="dialog" aria-modal="true" aria-labelledby="panel-name-display">
             <div class="modal-header">
-                <button id="close-modal-button" class="text-gray-400 hover:text-gray-600">
+                <button id="close-modal-button" class="text-gray-400 hover:text-gray-600" type="button" aria-label="Fechar">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
                     </svg>
@@ -798,27 +1065,27 @@
             <div class="edit-title-container">
                 <div class="panel-name-row">
                     <span id="panel-name-display" class="panel-name-display uppercase"></span>
-                    <button id="edit-name-button" class="edit-pencil">
+                    <button id="edit-name-button" class="edit-pencil" type="button" aria-label="Editar nome do painel">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-edit"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                     </button>
-                    <input type="text" id="panel-name-edit-input" class="hidden border p-1 rounded" />
+                    <input type="text" id="panel-name-edit-input" class="hidden border p-1 rounded" aria-label="Nome do painel" />
                 </div>
             </div>
             <div class="modal-controls">
                 <div class="modal-control-row">
                     <span>Linhas:</span>
                     <div class="flex gap-2">
-                        <button id="remove-row-button" class="modal-control-button">-</button>
+                        <button id="remove-row-button" class="modal-control-button" type="button" aria-label="Remover linha">-</button>
                         <span id="rows-count">9</span>
-                        <button id="add-row-button" class="modal-control-button">+</button>
+                        <button id="add-row-button" class="modal-control-button" type="button" aria-label="Adicionar linha">+</button>
                     </div>
                 </div>
                 <div class="modal-control-row">
                     <span>Colunas:</span>
                     <div class="flex gap-2">
-                        <button id="remove-col-button" class="modal-control-button">-</button>
+                        <button id="remove-col-button" class="modal-control-button" type="button" aria-label="Remover coluna">-</button>
                         <span id="cols-count">4</span>
-                        <button id="add-col-button" class="modal-control-button">+</button>
+                        <button id="add-col-button" class="modal-control-button" type="button" aria-label="Adicionar coluna">+</button>
                     </div>
                 </div>
             </div>
@@ -827,9 +1094,9 @@
 
     <!-- Configurações gerais do app -->
     <div id="app-settings-modal" class="settings-modal app-settings-modal">
-        <div class="settings-content app-settings-content">
+        <div class="settings-content app-settings-content" role="dialog" aria-modal="true" aria-labelledby="app-settings-title">
             <div class="app-settings-header">
-                <h2>Configurações</h2>
+                <h2 id="app-settings-title">Configurações</h2>
                 <button id="close-app-settings-button" class="text-gray-400 hover:text-gray-600" type="button" aria-label="Fechar configurações">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -860,6 +1127,29 @@
                         <span>Escuro</span>
                     </button>
                 </div>
+            </div>
+            <div id="behavior-settings">
+                <p class="app-settings-label">Durante a contagem</p>
+                <div class="setting-rows">
+                    <div class="setting-row" id="keep-awake-row">
+                        <div>
+                            <span class="setting-title" id="keep-awake-label">Manter tela ligada</span>
+                            <span class="setting-hint">Evita que a tela apague com o app aberto.</span>
+                        </div>
+                        <button type="button" class="switch" id="keep-awake-switch" role="switch" aria-checked="true" aria-labelledby="keep-awake-label"></button>
+                    </div>
+                    <div class="setting-row" id="vibration-row">
+                        <div>
+                            <span class="setting-title" id="vibration-label">Vibração</span>
+                            <span class="setting-hint">Vibra levemente ao marcar, preencher e desfazer.</span>
+                        </div>
+                        <button type="button" class="switch" id="vibration-switch" role="switch" aria-checked="true" aria-labelledby="vibration-label"></button>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <p class="app-settings-label">Dados</p>
+                <p class="setting-hint" id="storage-status">Verificando…</p>
             </div>
         </div>
     </div>
@@ -917,8 +1207,12 @@
         const LONG_PRESS_DURATION = 800; // 150ms delay + 650ms animation = 800ms total
         const longPressTimers = new WeakMap();
         const longPressStates = new WeakMap();
-        let undoSnapshot = null;
         let undoTimeout = null;
+        // Histórico de ações para "desfazer" em vários níveis
+        const HISTORY_LIMIT = 100;
+        const COALESCE_WINDOW_MS = 1500;
+        let undoHistory = [];
+        let lastHistoryMeta = { key: null, time: 0 };
         const themeStorageKey = 'appThemePreference';
         let themePreference = 'dark';
         const systemThemeMediaQuery = window.matchMedia
@@ -977,6 +1271,113 @@
             }
         }
 
+        // --- 1b. Preferências do app: vibração, tela ligada, janelas (modais) ---
+
+        const vibrationStorageKey = 'appVibrationPreference';
+        const keepAwakeStorageKey = 'appKeepAwakePreference';
+        const vibrationSupported = typeof navigator.vibrate === 'function' && navigator.maxTouchPoints > 0;
+        const wakeLockSupported = 'wakeLock' in navigator;
+
+        function readBooleanPreference(key, fallback) {
+            try {
+                const value = localStorage.getItem(key);
+                return value === null ? fallback : value === 'true';
+            } catch (e) {
+                return fallback;
+            }
+        }
+
+        function writeBooleanPreference(key, value) {
+            try {
+                localStorage.setItem(key, String(value));
+            } catch (e) {
+                console.warn('Não foi possível salvar a preferência:', e);
+            }
+        }
+
+        let vibrationEnabled = readBooleanPreference(vibrationStorageKey, true);
+        let keepAwakeEnabled = readBooleanPreference(keepAwakeStorageKey, true);
+
+        // Vibração curta de confirmação (só em aparelhos que suportam; ignora erros)
+        function haptic(pattern) {
+            if (!vibrationEnabled || !vibrationSupported) return;
+            try {
+                navigator.vibrate(pattern);
+            } catch (e) {
+                /* sem vibração disponível */
+            }
+        }
+
+        // Mantém a tela ligada enquanto o app está aberto e visível
+        let wakeLockSentinel = null;
+        let wakeLockRequestInFlight = false;
+
+        async function requestWakeLock() {
+            if (!wakeLockSupported || !keepAwakeEnabled) return;
+            if (wakeLockSentinel || wakeLockRequestInFlight) return;
+            if (document.visibilityState !== 'visible') return;
+
+            wakeLockRequestInFlight = true;
+            try {
+                const sentinel = await navigator.wakeLock.request('screen');
+                if (!keepAwakeEnabled) {
+                    await sentinel.release();
+                    return;
+                }
+                wakeLockSentinel = sentinel;
+                sentinel.addEventListener('release', () => {
+                    if (wakeLockSentinel === sentinel) wakeLockSentinel = null;
+                });
+            } catch (e) {
+                /* ex.: economia de bateria ativa; tentamos de novo no próximo toque */
+            } finally {
+                wakeLockRequestInFlight = false;
+            }
+        }
+
+        async function releaseWakeLock() {
+            const sentinel = wakeLockSentinel;
+            wakeLockSentinel = null;
+            if (!sentinel) return;
+            try {
+                await sentinel.release();
+            } catch (e) {
+                /* já liberado */
+            }
+        }
+
+        // O navegador libera o bloqueio ao sair do app; pedimos de novo ao voltar
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') requestWakeLock();
+        });
+        // Alguns navegadores só aceitam o pedido após um toque do usuário
+        document.addEventListener('pointerdown', () => {
+            if (!wakeLockSentinel) requestWakeLock();
+        }, { passive: true });
+
+        // Janelas (modais): levam o foco para dentro e devolvem ao fechar
+        let lastFocusedBeforeModal = null;
+
+        function openModal(modal, focusTarget) {
+            lastFocusedBeforeModal = document.activeElement;
+            modal.classList.add('show');
+            if (!focusTarget) return;
+            // A janela só fica "visível" (focável) um instante depois do início da transição
+            setTimeout(() => {
+                focusTarget.focus();
+                if (document.activeElement !== focusTarget) setTimeout(() => focusTarget.focus(), 300);
+            }, 50);
+        }
+
+        function closeModal(modal) {
+            modal.classList.remove('show');
+            const target = lastFocusedBeforeModal;
+            lastFocusedBeforeModal = null;
+            if (target && document.contains(target) && typeof target.focus === 'function') {
+                target.focus();
+            }
+        }
+
         // --- 2. Funções de Gerenciamento da UI ---
 
         function adjustContentPadding() {
@@ -1012,6 +1413,8 @@
                 }
             });
 
+            updateSeatAccessibility();
+
             document.getElementById('stand-count-input').value = appState.standCount;
             const leftSeats = appState.seats.left ? appState.seats.left.length : 0;
             const centerSeats = appState.seats.center ? appState.seats.center.length : 0;
@@ -1026,7 +1429,10 @@
             document.getElementById('salaB-count').textContent = salaBSeats;
 
             const pessoasText = total === 1 ? "PESSOA" : "PESSOAS";
-            document.querySelector('.summary-box p').innerHTML = `ASSISTÊNCIA: <span id="total-count">${total}</span> ${pessoasText}`;
+            const summaryText = document.querySelector('.summary-box p');
+            if (summaryText.textContent !== `ASSISTÊNCIA: ${total} ${pessoasText}`) {
+                summaryText.innerHTML = `ASSISTÊNCIA: <span id="total-count">${total}</span> ${pessoasText}`;
+            }
 
             const shareButton = document.getElementById('share-button');
             const resetButton = document.getElementById('reset-button');
@@ -1057,6 +1463,38 @@
             document.getElementById('center-title').textContent = panelConfig.center.name;
             document.getElementById('right-title').textContent = panelConfig.right.name;
             document.getElementById('salaB-title').textContent = panelConfig.salaB.name;
+
+            document.querySelectorAll('.settings-button').forEach(button => {
+                const config = panelConfig[button.dataset.section];
+                button.setAttribute('aria-label', `Configurar painel ${config ? config.name : ''}`.trim());
+                button.setAttribute('aria-haspopup', 'dialog');
+                button.setAttribute('type', 'button');
+            });
+
+            const historyButton = document.getElementById('history-undo-button');
+            if (historyButton) {
+                historyButton.disabled = undoHistory.length === 0;
+                historyButton.setAttribute(
+                    'aria-label',
+                    undoHistory.length > 0 ? `Desfazer última ação (${undoHistory.length})` : 'Desfazer última ação'
+                );
+            }
+        }
+
+        // Rótulos e estado para leitores de tela (não altera o visual)
+        function updateSeatAccessibility() {
+            Object.keys(panelConfig).forEach(sectionId => {
+                const grid = document.getElementById(`${sectionId}-seats`);
+                if (!grid) return;
+                const panelName = panelConfig[sectionId].name;
+
+                Array.from(grid.children).forEach((rowElement, rowIndex) => {
+                    Array.from(rowElement.children).forEach((seat, colIndex) => {
+                        seat.setAttribute('aria-checked', String(seat.classList.contains('selected')));
+                        seat.setAttribute('aria-label', `${panelName}, fileira ${rowIndex + 1}, assento ${colIndex + 1}`);
+                    });
+                });
+            });
         }
         
         function createSeats(sectionId) {
@@ -1073,12 +1511,17 @@
                 for (let j = 0; j < cols; j++) {
                     const seat = document.createElement('div');
                     seat.className = 'seat';
+                    seat.setAttribute('role', 'checkbox');
+                    seat.setAttribute('aria-checked', 'false');
+                    seat.tabIndex = (i === 0 && j === 0) ? 0 : -1;
                     seat.innerHTML = `
                         <svg class="checked-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="#10b981" stroke="#10b981" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
                         </svg>
                     `;
                     seat.onclick = toggleSeat;
+                    seat.addEventListener('keydown', handleSeatKeydown);
+                    seat.addEventListener('focus', () => setRovingSeat(seat));
                     seat.addEventListener('pointerdown', startSeatLongPress);
                     seat.addEventListener('pointermove', trackSeatLongPress);
                     seat.addEventListener('pointerup', finishSeatLongPress);
@@ -1100,20 +1543,55 @@
 
         // --- 3. Funções de Persistência de Dados ---
 
-        function clearUndoToast() {
+        // --- Histórico de ações (desfazer em vários níveis) ---
+
+        function snapshotState() {
+            return JSON.parse(JSON.stringify(appState));
+        }
+
+        // Assinatura simples para saber se uma ação realmente mudou algo
+        function stateSignature(state) {
+            const seats = Object.keys(state.seats).sort().map(id => `${id}:${state.seats[id].length}`);
+            return `${seats.join('|')}|${state.standCount}`;
+        }
+
+        // Guarda um estado anterior. Ações do mesmo tipo em sequência rápida
+        // (ex.: vários toques no "+") viram um único passo de desfazer.
+        function pushSnapshot(snapshot, coalesceKey = null) {
+            const now = Date.now();
+            if (coalesceKey && undoHistory.length > 0
+                && lastHistoryMeta.key === coalesceKey
+                && now - lastHistoryMeta.time < COALESCE_WINDOW_MS) {
+                lastHistoryMeta.time = now;
+                return;
+            }
+            undoHistory.push(snapshot);
+            if (undoHistory.length > HISTORY_LIMIT) undoHistory.shift();
+            lastHistoryMeta = { key: coalesceKey, time: now };
+        }
+
+        // Chamar ANTES de alterar o estado
+        function pushHistory(coalesceKey = null) {
+            pushSnapshot(snapshotState(), coalesceKey);
+        }
+
+        function clearHistory() {
+            undoHistory = [];
+            lastHistoryMeta = { key: null, time: 0 };
+        }
+
+        function hideUndoToast() {
             if (undoTimeout) {
                 clearTimeout(undoTimeout);
                 undoTimeout = null;
             }
-            undoSnapshot = null;
             const toast = document.getElementById('undo-toast');
             if (toast) toast.classList.remove('show');
         }
 
-        function showUndoToast(message, previousState) {
+        function showUndoToast(message) {
             if (undoTimeout) clearTimeout(undoTimeout);
 
-            undoSnapshot = previousState;
             const toast = document.getElementById('undo-toast');
             const messageElement = document.getElementById('undo-message');
 
@@ -1121,23 +1599,86 @@
 
             messageElement.textContent = message;
             toast.classList.add('show');
-            undoTimeout = setTimeout(() => {
-                clearUndoToast();
-            }, 5000);
+            undoTimeout = setTimeout(hideUndoToast, 5000);
         }
 
         function undoLastAction() {
-            if (!undoSnapshot) return;
+            if (undoHistory.length === 0) return;
 
-            const previousState = undoSnapshot;
-            clearUndoToast();
-            appState = previousState;
+            appState = undoHistory.pop();
+            lastHistoryMeta = { key: null, time: 0 };
             saveState();
             updateUI();
+            haptic([10, 30, 10]);
         }
 
-        function saveState() {
-            clearUndoToast();
+        // --- Persistência: localStorage (principal) + cópia no IndexedDB ---
+
+        const IDB_NAME = 'contador-assistencia';
+        const IDB_STORE = 'estado';
+        const IDB_KEY = 'ultimo';
+        let idbPromise = null;
+        let stateDirty = false;
+        let stateLoadedFromStorage = false;
+        let persistenceRequested = false;
+
+        function openIdb() {
+            if (!idbPromise) {
+                idbPromise = new Promise((resolve, reject) => {
+                    if (!('indexedDB' in window)) {
+                        reject(new Error('IndexedDB indisponível'));
+                        return;
+                    }
+                    const request = indexedDB.open(IDB_NAME, 1);
+                    request.onupgradeneeded = () => request.result.createObjectStore(IDB_STORE);
+                    request.onsuccess = () => resolve(request.result);
+                    request.onerror = () => reject(request.error);
+                });
+                idbPromise.catch(() => { idbPromise = null; });
+            }
+            return idbPromise;
+        }
+
+        function mirrorStateToIdb() {
+            const payload = {
+                appState: snapshotState(),
+                panelConfig: JSON.parse(JSON.stringify(panelConfig)),
+                savedAt: Date.now()
+            };
+            openIdb()
+                .then(db => {
+                    db.transaction(IDB_STORE, 'readwrite').objectStore(IDB_STORE).put(payload, IDB_KEY);
+                })
+                .catch(() => { /* a cópia é opcional */ });
+        }
+
+        function readStateFromIdb() {
+            return openIdb().then(db => new Promise((resolve, reject) => {
+                const request = db.transaction(IDB_STORE, 'readonly').objectStore(IDB_STORE).get(IDB_KEY);
+                request.onsuccess = () => resolve(request.result || null);
+                request.onerror = () => reject(request.error);
+            }));
+        }
+
+        function isValidSavedState(state) {
+            return !!(state && state.seats && typeof state.seats === 'object' && typeof state.standCount === 'number');
+        }
+
+        // Garante que todos os painéis existam e que a contagem em pé seja válida
+        function normalizeState() {
+            if (!appState || typeof appState !== 'object') {
+                appState = { seats: {}, standCount: 0 };
+            }
+            if (!appState.seats || typeof appState.seats !== 'object') appState.seats = {};
+            Object.keys(defaultPanelConfig).forEach(id => {
+                if (!Array.isArray(appState.seats[id])) appState.seats[id] = [];
+            });
+            appState.standCount = Number.isFinite(appState.standCount) && appState.standCount > 0
+                ? Math.floor(appState.standCount)
+                : 0;
+        }
+
+        function writeStateToLocalStorage() {
             try {
                 localStorage.setItem(storageKey, JSON.stringify(appState));
                 localStorage.setItem(panelConfigStorageKey, JSON.stringify(panelConfig));
@@ -1145,14 +1686,23 @@
                 console.error("Erro ao salvar estado no localStorage:", e);
             }
         }
-        
+
+        function saveState() {
+            hideUndoToast();
+            stateDirty = true;
+            writeStateToLocalStorage();
+            mirrorStateToIdb();
+            requestPersistentStorage();
+        }
+
         function loadState() {
             try {
                 const savedState = localStorage.getItem(storageKey);
                 if (savedState) {
                     const parsedState = JSON.parse(savedState);
-                    if (parsedState && parsedState.seats && typeof parsedState.standCount === 'number') {
+                    if (isValidSavedState(parsedState)) {
                         appState = parsedState;
+                        stateLoadedFromStorage = true;
                     }
                 }
                 const savedConfig = localStorage.getItem(panelConfigStorageKey);
@@ -1166,21 +1716,74 @@
                 console.error("Erro ao carregar estado:", e);
                 panelConfig = { ...defaultPanelConfig };
             }
+            normalizeState();
+        }
+
+        // Se o localStorage foi limpo (ou corrompeu), recupera a cópia do IndexedDB
+        async function restoreFromIdbIfNeeded() {
+            if (stateLoadedFromStorage) return;
+            try {
+                const saved = await readStateFromIdb();
+                if (stateDirty || !saved || !isValidSavedState(saved.appState)) return;
+
+                appState = saved.appState;
+                if (saved.panelConfig) panelConfig = { ...defaultPanelConfig, ...saved.panelConfig };
+                normalizeState();
+                clearHistory();
+                recreateAllSeats();
+                updateUI();
+                writeStateToLocalStorage();
+                console.info('Dados recuperados da cópia interna (IndexedDB).');
+            } catch (e) {
+                /* sem cópia disponível */
+            }
+        }
+
+        // Pede ao navegador para não apagar os dados automaticamente.
+        // Feito no primeiro toque (e não ao abrir) para o pedido ter contexto.
+        function requestPersistentStorage() {
+            if (persistenceRequested) return;
+            if (!(navigator.storage && navigator.storage.persist && navigator.storage.persisted)) return;
+            persistenceRequested = true;
+            navigator.storage.persisted()
+                .then(already => already || navigator.storage.persist())
+                .then(refreshStorageStatus)
+                .catch(() => { /* não suportado */ });
+        }
+
+        async function refreshStorageStatus() {
+            const element = document.getElementById('storage-status');
+            if (!element) return;
+
+            if (!(navigator.storage && navigator.storage.persisted)) {
+                element.textContent = 'Os dados ficam salvos neste aparelho, com uma cópia de segurança interna.';
+                return;
+            }
+            try {
+                const persisted = await navigator.storage.persisted();
+                element.textContent = persisted
+                    ? 'Armazenamento protegido: o navegador não apaga os dados automaticamente.'
+                    : 'Os dados ficam salvos neste aparelho, com uma cópia de segurança interna. Instalar o app na tela inicial ajuda a protegê-los contra limpezas automáticas.';
+            } catch (e) {
+                element.textContent = 'Os dados ficam salvos neste aparelho, com uma cópia de segurança interna.';
+            }
         }
 
         document.getElementById('undo-button').addEventListener('click', undoLastAction);
+        document.getElementById('history-undo-button').addEventListener('click', undoLastAction);
 
         const appSettingsButton = document.getElementById('app-settings-button');
         const appSettingsModal = document.getElementById('app-settings-modal');
         const closeAppSettingsButton = document.getElementById('close-app-settings-button');
 
         function closeAppSettings() {
-            appSettingsModal.classList.remove('show');
+            closeModal(appSettingsModal);
         }
 
         appSettingsButton.addEventListener('click', () => {
-            appSettingsModal.classList.add('show');
             updateThemeOptions();
+            refreshStorageStatus();
+            openModal(appSettingsModal, closeAppSettingsButton);
         });
 
         closeAppSettingsButton.addEventListener('click', closeAppSettings);
@@ -1195,12 +1798,73 @@
         });
 
         document.addEventListener('keydown', (event) => {
-            if (event.key === 'Escape' && appSettingsModal.classList.contains('show')) {
+            if (event.key !== 'Escape') return;
+            if (appSettingsModal.classList.contains('show')) {
                 closeAppSettings();
+            } else if (document.getElementById('settings-modal').classList.contains('show')) {
+                closeModal(document.getElementById('settings-modal'));
             }
         });
 
         // --- 4. Manipuladores de Eventos ---
+
+        // Navegação por teclado: setas movem entre assentos, Enter/Espaço marca,
+        // Shift+Enter preenche a fileira até o assento (equivale ao toque longo).
+        function setRovingSeat(seat) {
+            const grid = seat.closest('.seat-grid');
+            if (!grid) return;
+            grid.querySelectorAll('.seat[tabindex="0"]').forEach(other => {
+                if (other !== seat) other.tabIndex = -1;
+            });
+            seat.tabIndex = 0;
+        }
+
+        function handleSeatKeydown(event) {
+            const seat = event.currentTarget;
+            const row = seat.parentElement;
+            const grid = row ? row.parentElement : null;
+            if (!row || !grid) return;
+
+            const rowIndex = Array.from(grid.children).indexOf(row);
+            const colIndex = Array.from(row.children).indexOf(seat);
+            let target = null;
+
+            switch (event.key) {
+                case 'Enter':
+                case ' ':
+                    event.preventDefault();
+                    if (event.repeat) return;
+                    if (event.shiftKey) fillSeatsToLeft(seat);
+                    else toggleSeatElement(seat);
+                    return;
+                case 'ArrowLeft':
+                    target = row.children[colIndex - 1];
+                    break;
+                case 'ArrowRight':
+                    target = row.children[colIndex + 1];
+                    break;
+                case 'ArrowUp':
+                    target = grid.children[rowIndex - 1] ? grid.children[rowIndex - 1].children[colIndex] : null;
+                    break;
+                case 'ArrowDown':
+                    target = grid.children[rowIndex + 1] ? grid.children[rowIndex + 1].children[colIndex] : null;
+                    break;
+                case 'Home':
+                    target = row.children[0];
+                    break;
+                case 'End':
+                    target = row.children[row.children.length - 1];
+                    break;
+                default:
+                    return;
+            }
+
+            event.preventDefault();
+            if (target) {
+                setRovingSeat(target);
+                target.focus();
+            }
+        }
 
         function fillSeatsToLeft(seat) {
             const sectionElement = seat.closest('.seat-section');
@@ -1222,14 +1886,17 @@
                 appState.seats[sectionId].map(({ row, col }) => `${row}:${col}`)
             );
             const seatsForFeedback = [];
+            const missingCols = [];
 
             for (let col = 0; col <= seatColIndex; col++) {
-                const seatKey = `${rowIndex}:${col}`;
-                if (!occupiedSeats.has(seatKey)) {
-                    appState.seats[sectionId].push({ row: rowIndex, col });
-                }
+                if (!occupiedSeats.has(`${rowIndex}:${col}`)) missingCols.push(col);
                 const visualSeat = row.children[col];
                 if (visualSeat) seatsForFeedback.push(visualSeat);
+            }
+
+            if (missingCols.length > 0) {
+                pushHistory();
+                missingCols.forEach(col => appState.seats[sectionId].push({ row: rowIndex, col }));
             }
 
             saveState();
@@ -1288,6 +1955,7 @@
 
                 currentState.triggered = true;
                 fillSeatsToLeft(seat);
+                haptic([15, 30, 25]);
                 clearLongPressVisual(currentState);
             }, LONG_PRESS_DURATION));
         }
@@ -1347,7 +2015,11 @@
                 delete seat.dataset.skipNextClick;
                 return;
             }
-            
+
+            toggleSeatElement(seat);
+        }
+
+        function toggleSeatElement(seat) {
             const isSelected = seat.classList.contains('selected');
             const sectionElement = seat.closest('.seat-section');
             const sectionTitleElement = sectionElement.querySelector('.title-container span');
@@ -1358,6 +2030,7 @@
             const seatRowIndex = Array.from(seat.parentNode.parentNode.children).indexOf(seat.parentNode);
             const seatColIndex = Array.from(seat.parentNode.children).indexOf(seat);
             
+            pushHistory();
             if (isSelected) {
                 appState.seats[sectionId] = appState.seats[sectionId].filter(
                     s => s.row !== seatRowIndex || s.col !== seatColIndex
@@ -1368,11 +2041,12 @@
 
             saveState();
             updateUI();
+            haptic(10);
         }
 
         // Ocupar assentos
         document.getElementById('occupy-button').addEventListener('click', () => {
-            const previousState = JSON.parse(JSON.stringify(appState));
+            const previousState = snapshotState();
             Object.keys(panelConfig).forEach(sectionId => {
                 const { rows, cols } = panelConfig[sectionId];
                 appState.seats[sectionId] = [];
@@ -1382,39 +2056,55 @@
                     }
                 }
             });
+            const changed = stateSignature(previousState) !== stateSignature(appState);
+            if (changed) pushSnapshot(previousState);
             saveState();
             updateUI();
-            showUndoToast('Todos os assentos ocupados.', previousState);
+            if (changed) {
+                showUndoToast('Todos os assentos ocupados.');
+                haptic(30);
+            }
         });
 
         // Zerar tudo
         document.getElementById('reset-button').addEventListener('click', () => {
-            const previousState = JSON.parse(JSON.stringify(appState));
+            const previousState = snapshotState();
             Object.keys(appState.seats).forEach(key => appState.seats[key] = []);
             appState.standCount = 0;
+            const changed = stateSignature(previousState) !== stateSignature(appState);
+            if (changed) pushSnapshot(previousState);
             saveState();
             updateUI();
-            showUndoToast('Assistência zerada.', previousState);
+            if (changed) {
+                showUndoToast('Assistência zerada.');
+                haptic([30, 40, 30]);
+            }
         });
 
         // Contagem em pé
         document.getElementById('minus-button').addEventListener('click', () => {
             if (appState.standCount > 0) {
+                pushHistory('stand');
                 appState.standCount--;
                 saveState();
                 updateUI();
+                haptic(10);
             }
         });
 
         document.getElementById('plus-button').addEventListener('click', () => {
+            pushHistory('stand');
             appState.standCount++;
             saveState();
             updateUI();
+            haptic(10);
         });
 
         document.getElementById('stand-count-input').addEventListener('change', (e) => {
             const val = parseInt(e.target.value, 10);
-            appState.standCount = isNaN(val) || val < 0 ? 0 : val;
+            const newCount = isNaN(val) || val < 0 ? 0 : val;
+            if (newCount !== appState.standCount) pushHistory('stand-input');
+            appState.standCount = newCount;
             saveState();
             updateUI();
         });
@@ -1480,12 +2170,12 @@
                 rowsCountSpan.textContent = config.rows;
                 colsCountSpan.textContent = config.cols;
 
-                settingsModal.classList.add('show');
+                openModal(settingsModal, closeModalButton);
             });
         });
 
         closeModalButton.addEventListener('click', () => {
-            settingsModal.classList.remove('show');
+            closeModal(settingsModal);
         });
 
         editNameButton.addEventListener('click', () => {
@@ -1531,6 +2221,7 @@
             appState.seats[currentSectionId] = appState.seats[currentSectionId].filter(
                 s => s.row < panelConfig[currentSectionId].rows
             );
+            clearHistory();
             recreateAllSeats();
             saveState();
             updateUI();
@@ -1553,6 +2244,7 @@
             appState.seats[currentSectionId] = appState.seats[currentSectionId].filter(
                 s => s.col < panelConfig[currentSectionId].cols
             );
+            clearHistory();
             recreateAllSeats();
             saveState();
             updateUI();
@@ -1578,6 +2270,42 @@
                 .catch(err => console.warn('Não foi possível carregar a versão dinamicamente:', err));
         }
 
+        // --- Interruptores das preferências (tela ligada e vibração) ---
+        function initPreferenceControls() {
+            const keepAwakeRow = document.getElementById('keep-awake-row');
+            const vibrationRow = document.getElementById('vibration-row');
+            const keepAwakeSwitch = document.getElementById('keep-awake-switch');
+            const vibrationSwitch = document.getElementById('vibration-switch');
+
+            if (!wakeLockSupported) keepAwakeRow.classList.add('hidden');
+            if (!vibrationSupported) vibrationRow.classList.add('hidden');
+            if (!wakeLockSupported && !vibrationSupported) {
+                document.getElementById('behavior-settings').classList.add('hidden');
+            }
+
+            const syncSwitches = () => {
+                keepAwakeSwitch.setAttribute('aria-checked', String(keepAwakeEnabled));
+                vibrationSwitch.setAttribute('aria-checked', String(vibrationEnabled));
+            };
+
+            keepAwakeSwitch.addEventListener('click', () => {
+                keepAwakeEnabled = !keepAwakeEnabled;
+                writeBooleanPreference(keepAwakeStorageKey, keepAwakeEnabled);
+                syncSwitches();
+                if (keepAwakeEnabled) requestWakeLock();
+                else releaseWakeLock();
+            });
+
+            vibrationSwitch.addEventListener('click', () => {
+                vibrationEnabled = !vibrationEnabled;
+                writeBooleanPreference(vibrationStorageKey, vibrationEnabled);
+                syncSwitches();
+                haptic(20);
+            });
+
+            syncSwitches();
+        }
+
         // Inicialização
         window.addEventListener('DOMContentLoaded', () => {
             loadState();
@@ -1585,6 +2313,12 @@
             updateUI();
             adjustContentPadding();
             loadVersionInFooter();
+            initPreferenceControls();
+            refreshStorageStatus();
+            requestWakeLock();
+            // Garante que exista uma cópia de segurança logo na primeira abertura após a atualização
+            if (stateLoadedFromStorage) mirrorStateToIdb();
+            else restoreFromIdbIfNeeded();
         });
 
         window.addEventListener('resize', adjustContentPadding);
