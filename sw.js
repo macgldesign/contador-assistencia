@@ -1,4 +1,4 @@
-const CACHE_NAME = 'contador-assistencia-v1.1.0';
+const CACHE_NAME = 'contador-assistencia-v1.2.0';
 // Fontes ficam num cache à parte para sobreviver às atualizações do app
 const FONT_CACHE = 'contador-assistencia-fonts-v1';
 const FONT_HOSTS = ['fonts.googleapis.com', 'fonts.gstatic.com'];
@@ -81,7 +81,9 @@ async function networkFirst(request) {
 function fetchWithTimeout(request, ms) {
   return new Promise((resolve, reject) => {
     const timer = setTimeout(() => reject(new Error('timeout')), ms);
-    fetch(request).then(
+    // 'no-cache' = sempre confirma com o servidor (o GitHub Pages guarda por ~10 min);
+    // sem isso o aviso de atualização poderia ler uma cópia velha
+    fetch(request, { cache: 'no-cache' }).then(
       (response) => { clearTimeout(timer); resolve(response); },
       (error) => { clearTimeout(timer); reject(error); }
     );

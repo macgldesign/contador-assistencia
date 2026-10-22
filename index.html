@@ -855,6 +855,180 @@
             }
         }
 
+        /* --- Impede o "puxar para atualizar" do navegador:
+               ele recarregava o app sem querer no meio da contagem --- */
+        html,
+        body {
+            overscroll-behavior-y: none;
+        }
+
+        /* --- Notas de atualização --- */
+        .release-notes-content {
+            overflow: hidden;
+        }
+
+        .notes-body {
+            display: flex;
+            flex-direction: column;
+            gap: 1.1rem;
+            min-height: 0;
+            overflow-y: auto;
+        }
+
+        .notes-version {
+            margin: 0;
+            color: #6b7280;
+            font-size: 0.8rem;
+        }
+
+        .notes-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.45rem;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .notes-list li {
+            position: relative;
+            padding-left: 1.05rem;
+            color: #374151;
+            font-size: 0.92rem;
+            line-height: 1.35;
+        }
+
+        .notes-list li::before {
+            content: '';
+            position: absolute;
+            top: 0.5em;
+            left: 0.1rem;
+            width: 6px;
+            height: 6px;
+            background: #10b981;
+            border-radius: 50%;
+        }
+
+        .notes-confirm {
+            width: 100%;
+            padding: 0.75rem;
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 700;
+            background: #10b981;
+            border: none;
+            border-radius: 0.75rem;
+            cursor: pointer;
+        }
+
+        .notes-confirm:focus-visible,
+        .link-button:focus-visible {
+            outline: 2px solid #10b981;
+            outline-offset: 2px;
+        }
+
+        .link-button {
+            padding: 0;
+            color: #059669;
+            font-weight: 600;
+            text-align: left;
+            text-decoration: underline;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+
+        html[data-theme="dark"] .notes-list li {
+            color: #e4e4e7;
+        }
+
+        html[data-theme="dark"] .notes-version {
+            color: #a1a1aa;
+        }
+
+        html[data-theme="dark"] .link-button {
+            color: #34d399;
+        }
+
+        /* --- Novidades da versão: permite selecionar e copiar o texto --- */
+        .release-notes-content {
+            user-select: text;
+            -webkit-user-select: text;
+            -webkit-touch-callout: default;
+        }
+
+        .release-notes-content .notes-confirm {
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* --- Aviso de nova versão (usa o visual do aviso de desfazer) --- */
+        .update-toast {
+            bottom: 5.5rem;
+            gap: 0.4rem;
+            padding-right: 0.5rem;
+        }
+
+        .update-toast .update-later {
+            padding: 0.35rem 0.5rem;
+            color: #d1d5db;
+        }
+
+        /* --- Painéis dinâmicos --- */
+        .panel-danger {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-top: 0.25rem;
+            padding-top: 0.9rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .remove-panel-button {
+            width: 100%;
+            padding: 0.6rem;
+            color: #b91c1c;
+            font-weight: 700;
+            background: #fee2e2;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+        }
+
+        .remove-panel-button.confirming {
+            color: #fff;
+            background: #dc2626;
+        }
+
+        .remove-panel-button:disabled,
+        .modal-control-button:disabled,
+        .link-button:disabled {
+            opacity: 0.4;
+            cursor: default;
+        }
+
+        .link-button:disabled {
+            text-decoration: none;
+        }
+
+        .setting-hint:empty {
+            display: none;
+        }
+
+        html[data-theme="dark"] .panel-danger {
+            border-top-color: #3f3f46;
+        }
+
+        html[data-theme="dark"] .remove-panel-button {
+            color: #fca5a5;
+            background: rgba(220, 38, 38, 0.18);
+        }
+
+        html[data-theme="dark"] .remove-panel-button.confirming {
+            color: #fff;
+            background: #dc2626;
+        }
+
         .hidden {
             display: none !important;
         }
@@ -981,61 +1155,7 @@
         <div class="auditorium flex flex-col items-center w-full">
             <div class="stage mobile-layout lg:flex-row lg:items-start lg:gap-8">
 
-                <!-- Painel Esquerda -->
-                <div class="seat-section" role="group" aria-labelledby="left-title">
-                    <div class="title-container">
-                        <span class="panel-title uppercase" id="left-title" data-section="left">ESQUERDA</span>
-                        <button class="settings-button" data-section="left">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-more-vertical"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
-                        </button>
-                    </div>
-                    <div id="left-seats" class="seat-grid"></div>
-                    <div class="seat-count-container">
-                        <p class="seat-count" id="left-count">0</p>
-                    </div>
-                </div>
-    
-                <!-- Painel Central -->
-                <div class="seat-section" role="group" aria-labelledby="center-title">
-                    <div class="title-container">
-                        <span class="panel-title uppercase" id="center-title" data-section="center">CENTRAL</span>
-                        <button class="settings-button" data-section="center">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-more-vertical"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
-                        </button>
-                    </div>
-                    <div id="center-seats" class="seat-grid"></div>
-                    <div class="seat-count-container">
-                        <p class="seat-count" id="center-count">0</p>
-                    </div>
-                </div>
-    
-                <!-- Painel Direita -->
-                <div class="seat-section" role="group" aria-labelledby="right-title">
-                    <div class="title-container">
-                        <span class="panel-title uppercase" id="right-title" data-section="right">DIREITA</span>
-                        <button class="settings-button" data-section="right">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-more-vertical"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
-                        </button>
-                    </div>
-                    <div id="right-seats" class="seat-grid"></div>
-                    <div class="seat-count-container">
-                        <p class="seat-count" id="right-count">0</p>
-                    </div>
-                </div>
-                
-                <!-- Painel Sala B -->
-                <div class="seat-section" role="group" aria-labelledby="salaB-title">
-                    <div class="title-container">
-                        <span class="panel-title uppercase" id="salaB-title" data-section="salaB">SALA B</span>
-                        <button class="settings-button" data-section="salaB">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-more-vertical"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
-                        </button>
-                    </div>
-                    <div id="salaB-seats" class="seat-grid"></div>
-                    <div class="seat-count-container">
-                        <p class="seat-count" id="salaB-count">0</p>
-                    </div>
-                </div>
+                <!-- Os painéis (Esquerda, Central, ...) são montados por renderPanels() -->
 
                 <div class="stand-count-section" role="group" aria-labelledby="stand-title">
                     <h2 id="stand-title" class="text-xl font-semibold text-center">EM PÉ</h2>
@@ -1087,6 +1207,17 @@
                         <span id="cols-count">4</span>
                         <button id="add-col-button" class="modal-control-button" type="button" aria-label="Adicionar coluna">+</button>
                     </div>
+                </div>
+                <div class="modal-control-row">
+                    <span>Posição:</span>
+                    <div class="flex gap-2">
+                        <button id="move-panel-up-button" class="modal-control-button" type="button" aria-label="Mover painel para cima">↑</button>
+                        <button id="move-panel-down-button" class="modal-control-button" type="button" aria-label="Mover painel para baixo">↓</button>
+                    </div>
+                </div>
+                <div class="panel-danger">
+                    <button id="remove-panel-button" class="remove-panel-button" type="button">Remover painel</button>
+                    <p class="setting-hint" id="remove-panel-hint"></p>
                 </div>
             </div>
         </div>
@@ -1151,12 +1282,39 @@
                 <p class="app-settings-label">Dados</p>
                 <p class="setting-hint" id="storage-status">Verificando…</p>
             </div>
+            <div>
+                <p class="app-settings-label">Painéis</p>
+                <button type="button" class="link-button" id="add-panel-button">+ Adicionar painel</button>
+                <p class="setting-hint" id="panel-count-hint"></p>
+            </div>
+            <div>
+                <p class="app-settings-label">Sobre</p>
+                <button type="button" class="link-button" id="show-release-notes-button">Ver novidades da versão <span id="about-version"></span></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notas de atualização -->
+    <div id="release-notes-modal" class="settings-modal app-settings-modal">
+        <div class="settings-content app-settings-content release-notes-content" role="dialog" aria-modal="true" aria-labelledby="release-notes-title">
+            <div class="app-settings-header">
+                <h2 id="release-notes-title">Novidades</h2>
+            </div>
+            <div class="notes-body" id="release-notes-body"></div>
+            <button type="button" class="notes-confirm" id="release-notes-confirm">Entendi</button>
         </div>
     </div>
 
     <div id="undo-toast" class="undo-toast" role="status" aria-live="polite">
         <span id="undo-message"></span>
         <button id="undo-button" type="button">DESFAZER</button>
+    </div>
+
+    <!-- Aviso de nova versão -->
+    <div id="update-toast" class="undo-toast update-toast" role="status" aria-live="polite">
+        <span>Nova versão disponível</span>
+        <button id="update-now-button" type="button">ATUALIZAR</button>
+        <button id="update-later-button" type="button" class="update-later" aria-label="Agora não">✕</button>
     </div>
 
     <script>
@@ -1186,9 +1344,13 @@
             right: { name: 'DIREITA', rows: 9, cols: 4 },
             salaB: { name: 'SALA B', rows: 5, cols: 5 }
         };
+        const defaultPanelOrder = ['left', 'center', 'right', 'salaB'];
+        const MAX_PANELS = 8;
+        let panelOrder = [...defaultPanelOrder];
 
         const storageKey = 'seatCounterState';
         const panelConfigStorageKey = 'panelConfigState';
+        const panelOrderStorageKey = 'panelOrderState';
         let isAdvancedShareMode = false;
         
         let panelConfig = {};
@@ -1378,6 +1540,186 @@
             }
         }
 
+        // --- Notas de atualização ---
+        // A CADA VERSÃO NOVA:
+        //   1) troque APP_VERSION aqui e CACHE_NAME no sw.js (mesmo número);
+        //   2) reescreva RELEASE_NOTES só com o que mudou NESTA versão (não acumule as antigas).
+        // Quem pular versões vê apenas as notas da versão atual.
+        const APP_VERSION = '1.2.0';
+        const RELEASE_NOTES = [
+            {
+                title: 'Novidades',
+                items: [
+                    'Adicionar e remover painéis (até 8) e mudar a ordem deles. O layout atual continua como padrão.',
+                    'Aviso "Nova versão disponível" com botão Atualizar: o app não recarrega mais sozinho.',
+                    'Botão ↩ para desfazer várias ações seguidas (até 100).',
+                    'Opção "Manter tela ligada" durante a contagem.',
+                    'Vibração ao marcar, preencher, ocupar, zerar e desfazer (com interruptor).',
+                    'Cópia de segurança automática dos dados, com recuperação se forem apagados.',
+                    'Notas de atualização, como esta janela.'
+                ]
+            },
+            {
+                title: 'Melhorias',
+                items: [
+                    'O app abre e funciona offline, inclusive visual e fontes após o primeiro acesso.',
+                    'Com sinal fraco, abre a versão salva em vez de esperar a internet.',
+                    'Dados protegidos contra limpeza automática, quando o navegador permitir.',
+                    'O histórico de desfazer é mantido mesmo se o app for recarregado.',
+                    'Leitores de tela e teclado: assentos com nome e estado, setas e Enter/Espaço.',
+                    'Animações reduzidas quando o sistema pede.'
+                ]
+            },
+            {
+                title: 'Correções',
+                items: [
+                    'Puxar a tela para baixo não recarrega mais o app nem apaga o histórico de desfazer.',
+                    'Corrigido erro ao marcar a Sala B com dados salvos por versões antigas.'
+                ]
+            }
+        ];
+        const lastSeenVersionKey = 'appLastSeenVersion';
+
+        function readLastSeenVersion() {
+            try {
+                return localStorage.getItem(lastSeenVersionKey);
+            } catch (e) {
+                return APP_VERSION; // sem armazenamento: não insiste em mostrar
+            }
+        }
+
+        function markReleaseNotesSeen() {
+            try {
+                localStorage.setItem(lastSeenVersionKey, APP_VERSION);
+            } catch (e) {
+                /* ignora */
+            }
+        }
+
+        // Quem já usava o app tem dados salvos; instalação nova não tem
+        function hasExistingUserData() {
+            try {
+                return [storageKey, panelConfigStorageKey, themeStorageKey]
+                    .some(key => localStorage.getItem(key) !== null);
+            } catch (e) {
+                return false;
+            }
+        }
+
+        function renderReleaseNotes() {
+            document.getElementById('release-notes-title').textContent = `Novidades da versão ${APP_VERSION}`;
+            const body = document.getElementById('release-notes-body');
+            body.textContent = '';
+            RELEASE_NOTES.forEach(group => {
+                if (!group.items.length) return;
+                const section = document.createElement('div');
+                const label = document.createElement('p');
+                label.className = 'app-settings-label';
+                label.textContent = group.title;
+                const list = document.createElement('ul');
+                list.className = 'notes-list';
+                group.items.forEach(text => {
+                    const item = document.createElement('li');
+                    item.textContent = text;
+                    list.appendChild(item);
+                });
+                section.append(label, list);
+                body.appendChild(section);
+            });
+        }
+
+        function openReleaseNotes() {
+            renderReleaseNotes();
+            openModal(document.getElementById('release-notes-modal'), document.getElementById('release-notes-confirm'));
+        }
+
+        function closeReleaseNotes() {
+            markReleaseNotesSeen();
+            closeModal(document.getElementById('release-notes-modal'));
+        }
+
+        // Mostra uma única vez por versão; versões puladas são ignoradas
+        function maybeShowReleaseNotes() {
+            const seen = readLastSeenVersion();
+            if (seen === APP_VERSION) return;
+            if (seen === null && !hasExistingUserData()) {
+                markReleaseNotesSeen(); // instalação nova: não há "novidade" a contar
+                return;
+            }
+            setTimeout(openReleaseNotes, 500);
+        }
+
+        document.getElementById('release-notes-confirm').addEventListener('click', closeReleaseNotes);
+        document.getElementById('show-release-notes-button').addEventListener('click', () => {
+            closeAppSettings();
+            openReleaseNotes();
+        });
+        document.getElementById('about-version').textContent = APP_VERSION;
+
+        // --- Aviso de nova versão ---
+        // O app não recarrega mais sozinho (isso podia interromper a contagem):
+        // avisa, e o usuário escolhe o momento de atualizar.
+        let swRegistration = null;
+        let latestPublishedVersion = null;
+        let dismissedUpdateVersion = null;
+        let lastUpdateCheck = 0;
+
+        function isNewerVersion(candidate, current) {
+            const a = candidate.split('.').map(Number);
+            const b = current.split('.').map(Number);
+            for (let i = 0; i < 3; i++) {
+                if ((a[i] || 0) !== (b[i] || 0)) return (a[i] || 0) > (b[i] || 0);
+            }
+            return false;
+        }
+
+        // Compara a versão publicada (lida do sw.js) com a que está rodando
+        async function checkForNewVersion(force = false) {
+            const now = Date.now();
+            if (!force && now - lastUpdateCheck < 60000) return;
+            lastUpdateCheck = now;
+
+            if (swRegistration) swRegistration.update().catch(() => { /* offline */ });
+            try {
+                const response = await fetch('/contador-assistencia/sw.js', { cache: 'no-store' });
+                if (!response.ok) return;
+                const match = (await response.text()).match(/CACHE_NAME\s*=\s*'contador-assistencia-v(\d+\.\d+\.\d+)'/);
+                const published = match && match[1];
+                if (published && isNewerVersion(published, APP_VERSION) && published !== dismissedUpdateVersion) {
+                    latestPublishedVersion = published;
+                    document.getElementById('update-toast').classList.add('show');
+                }
+            } catch (e) {
+                /* sem conexão: tenta de novo mais tarde */
+            }
+        }
+
+        function hideUpdateToast() {
+            document.getElementById('update-toast').classList.remove('show');
+        }
+
+        function applyUpdate() {
+            persistHistoryNow(); // o histórico de desfazer sobrevive à atualização
+            window.location.reload();
+        }
+
+        function watchForAppUpdates(registration) {
+            swRegistration = registration || null;
+            setTimeout(() => checkForNewVersion(true), 2000);
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible') checkForNewVersion();
+            });
+            window.addEventListener('online', () => checkForNewVersion());
+            setInterval(() => checkForNewVersion(), 30 * 60 * 1000);
+        }
+
+        document.getElementById('update-now-button').addEventListener('click', applyUpdate);
+        document.getElementById('update-later-button').addEventListener('click', () => {
+            dismissedUpdateVersion = latestPublishedVersion;
+            hideUpdateToast();
+        });
+
+
         // --- 2. Funções de Gerenciamento da UI ---
 
         function adjustContentPadding() {
@@ -1416,17 +1758,18 @@
             updateSeatAccessibility();
 
             document.getElementById('stand-count-input').value = appState.standCount;
-            const leftSeats = appState.seats.left ? appState.seats.left.length : 0;
-            const centerSeats = appState.seats.center ? appState.seats.center.length : 0;
-            const rightSeats = appState.seats.right ? appState.seats.right.length : 0;
-            const salaBSeats = appState.seats.salaB ? appState.seats.salaB.length : 0;
-            const total = leftSeats + centerSeats + rightSeats + salaBSeats + appState.standCount;
+            const seatCounts = {};
+            panelOrder.forEach(id => {
+                seatCounts[id] = appState.seats[id] ? appState.seats[id].length : 0;
+            });
+            const occupiedSeatTotal = Object.values(seatCounts).reduce((sum, n) => sum + n, 0);
+            const total = occupiedSeatTotal + appState.standCount;
 
             document.getElementById('total-count').textContent = total;
-            document.getElementById('left-count').textContent = leftSeats;
-            document.getElementById('center-count').textContent = centerSeats;
-            document.getElementById('right-count').textContent = rightSeats;
-            document.getElementById('salaB-count').textContent = salaBSeats;
+            panelOrder.forEach(id => {
+                const countElement = document.getElementById(`${id}-count`);
+                if (countElement) countElement.textContent = seatCounts[id];
+            });
 
             const pessoasText = total === 1 ? "PESSOA" : "PESSOAS";
             const summaryText = document.querySelector('.summary-box p');
@@ -1439,7 +1782,7 @@
             const occupyButton = document.getElementById('occupy-button');
             const summaryBox = document.querySelector('.summary-box');
 
-            const totalOccupiedSeats = leftSeats + centerSeats + rightSeats + salaBSeats;
+            const totalOccupiedSeats = occupiedSeatTotal;
             const totalCapacity = Object.values(panelConfig).reduce((acc, { rows, cols }) => acc + (rows * cols), 0);
 
             if (total === 0) {
@@ -1459,10 +1802,15 @@
                 summaryBox.classList.remove('advanced-share-mode');
             }
 
-            document.getElementById('left-title').textContent = panelConfig.left.name;
-            document.getElementById('center-title').textContent = panelConfig.center.name;
-            document.getElementById('right-title').textContent = panelConfig.right.name;
-            document.getElementById('salaB-title').textContent = panelConfig.salaB.name;
+            panelOrder.forEach(id => {
+                const titleElement = document.getElementById(`${id}-title`);
+                if (titleElement) titleElement.textContent = panelConfig[id].name;
+            });
+
+            const addPanelButton = document.getElementById('add-panel-button');
+            if (addPanelButton) addPanelButton.disabled = panelOrder.length >= MAX_PANELS;
+            const panelCountHint = document.getElementById('panel-count-hint');
+            if (panelCountHint) panelCountHint.textContent = `${panelOrder.length} de ${MAX_PANELS} painéis`;
 
             document.querySelectorAll('.settings-button').forEach(button => {
                 const config = panelConfig[button.dataset.section];
@@ -1535,10 +1883,85 @@
         }
 
         function recreateAllSeats() {
-            createSeats('left');
-            createSeats('center');
-            createSeats('right');
-            createSeats('salaB');
+            panelOrder.forEach(createSeats);
+        }
+
+        // --- Painéis dinâmicos (adicionar, remover, reordenar) ---
+
+        function buildPanelElement(id) {
+            const section = document.createElement('div');
+            section.className = 'seat-section';
+            section.setAttribute('role', 'group');
+            section.setAttribute('aria-labelledby', `${id}-title`);
+            section.innerHTML = `
+                <div class="title-container">
+                    <span class="panel-title uppercase" id="${id}-title" data-section="${id}"></span>
+                    <button class="settings-button" data-section="${id}" type="button">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-more-vertical"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
+                    </button>
+                </div>
+                <div id="${id}-seats" class="seat-grid"></div>
+                <div class="seat-count-container">
+                    <p class="seat-count" id="${id}-count">0</p>
+                </div>
+            `;
+            section.querySelector('.panel-title').textContent = panelConfig[id].name;
+            return section;
+        }
+
+        // Monta (ou remonta) todos os painéis na ordem salva
+        function renderPanels() {
+            const stage = document.querySelector('.stage');
+            const standSection = stage.querySelector('.stand-count-section');
+            stage.querySelectorAll('.seat-section').forEach(element => element.remove());
+            panelOrder.forEach(id => stage.insertBefore(buildPanelElement(id), standSection));
+            recreateAllSeats();
+        }
+
+        function generatePanelId() {
+            return 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+        }
+
+        function addPanel() {
+            if (panelOrder.length >= MAX_PANELS) return null;
+
+            const id = generatePanelId();
+            let number = panelOrder.length + 1;
+            const usedNames = new Set(panelOrder.map(panelId => panelConfig[panelId].name));
+            while (usedNames.has(`PAINEL ${number}`)) number++;
+
+            panelConfig[id] = { name: `PAINEL ${number}`, rows: 5, cols: 5 };
+            appState.seats[id] = [];
+            panelOrder.push(id);
+
+            renderPanels();
+            saveState();
+            updateUI();
+            return id;
+        }
+
+        function removePanel(id) {
+            if (panelOrder.length <= 1 || !panelConfig[id]) return;
+
+            panelOrder = panelOrder.filter(panelId => panelId !== id);
+            delete panelConfig[id];
+            delete appState.seats[id];
+            clearHistory(); // os passos antigos podem citar o painel removido
+
+            renderPanels();
+            saveState();
+            updateUI();
+        }
+
+        function movePanel(id, direction) {
+            const from = panelOrder.indexOf(id);
+            const to = from + direction;
+            if (from === -1 || to < 0 || to >= panelOrder.length) return;
+
+            [panelOrder[from], panelOrder[to]] = [panelOrder[to], panelOrder[from]];
+            renderPanels();
+            saveState();
+            updateUI();
         }
 
         // --- 3. Funções de Persistência de Dados ---
@@ -1568,6 +1991,7 @@
             undoHistory.push(snapshot);
             if (undoHistory.length > HISTORY_LIMIT) undoHistory.shift();
             lastHistoryMeta = { key: coalesceKey, time: now };
+            scheduleHistorySave();
         }
 
         // Chamar ANTES de alterar o estado
@@ -1578,7 +2002,63 @@
         function clearHistory() {
             undoHistory = [];
             lastHistoryMeta = { key: null, time: 0 };
+            scheduleHistorySave();
         }
+
+        // O histórico também é salvo, para sobreviver a recarregamentos do app
+        // (puxar a tela, atualização automática, app fechado pelo sistema)
+        const historyStorageKey = 'seatCounterHistory';
+        let historySaveTimer = null;
+
+        function persistHistoryNow() {
+            if (historySaveTimer) {
+                clearTimeout(historySaveTimer);
+                historySaveTimer = null;
+            }
+            try {
+                if (undoHistory.length === 0) localStorage.removeItem(historyStorageKey);
+                else localStorage.setItem(historyStorageKey, JSON.stringify(undoHistory));
+            } catch (e) {
+                /* sem espaço: o histórico segue só na memória */
+            }
+        }
+
+        function scheduleHistorySave() {
+            if (historySaveTimer) clearTimeout(historySaveTimer);
+            historySaveTimer = setTimeout(persistHistoryNow, 150);
+        }
+
+        // Só aceita passos que ainda cabem no layout atual dos painéis
+        function historySnapshotFitsLayout(snapshot) {
+            if (!isValidSavedState(snapshot)) return false;
+            // Painéis criados depois do passo salvo simplesmente não aparecem nele (ficam vazios)
+            return Object.keys(snapshot.seats).every(id => {
+                const seats = snapshot.seats[id];
+                const config = panelConfig[id];
+                return Array.isArray(seats) && !!config &&
+                    seats.every(s => s && s.row < config.rows && s.col < config.cols);
+            });
+        }
+
+        function loadHistory() {
+            try {
+                const raw = localStorage.getItem(historyStorageKey);
+                if (!raw) return;
+                const parsed = JSON.parse(raw);
+                if (Array.isArray(parsed) && parsed.every(historySnapshotFitsLayout)) {
+                    undoHistory = parsed.slice(-HISTORY_LIMIT);
+                } else {
+                    localStorage.removeItem(historyStorageKey);
+                }
+            } catch (e) {
+                /* histórico inválido: começa vazio */
+            }
+        }
+
+        window.addEventListener('pagehide', persistHistoryNow);
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden') persistHistoryNow();
+        });
 
         function hideUndoToast() {
             if (undoTimeout) {
@@ -1606,7 +2086,9 @@
             if (undoHistory.length === 0) return;
 
             appState = undoHistory.pop();
+            normalizeState(); // painéis criados depois deste passo voltam vazios
             lastHistoryMeta = { key: null, time: 0 };
+            scheduleHistorySave();
             saveState();
             updateUI();
             haptic([10, 30, 10]);
@@ -1643,6 +2125,7 @@
             const payload = {
                 appState: snapshotState(),
                 panelConfig: JSON.parse(JSON.stringify(panelConfig)),
+                panelOrder: [...panelOrder],
                 savedAt: Date.now()
             };
             openIdb()
@@ -1670,8 +2153,12 @@
                 appState = { seats: {}, standCount: 0 };
             }
             if (!appState.seats || typeof appState.seats !== 'object') appState.seats = {};
-            Object.keys(defaultPanelConfig).forEach(id => {
+            panelOrder.forEach(id => {
                 if (!Array.isArray(appState.seats[id])) appState.seats[id] = [];
+            });
+            // Descarta contagens de painéis que não existem mais
+            Object.keys(appState.seats).forEach(id => {
+                if (!panelConfig[id]) delete appState.seats[id];
             });
             appState.standCount = Number.isFinite(appState.standCount) && appState.standCount > 0
                 ? Math.floor(appState.standCount)
@@ -1682,6 +2169,7 @@
             try {
                 localStorage.setItem(storageKey, JSON.stringify(appState));
                 localStorage.setItem(panelConfigStorageKey, JSON.stringify(panelConfig));
+                localStorage.setItem(panelOrderStorageKey, JSON.stringify(panelOrder));
             } catch (e) {
                 console.error("Erro ao salvar estado no localStorage:", e);
             }
@@ -1695,6 +2183,35 @@
             requestPersistentStorage();
         }
 
+        // Valida os dados de um painel, usando o padrão quando algo estiver faltando
+        function sanitizePanel(saved, fallback) {
+            const base = fallback || { name: 'PAINEL', rows: 5, cols: 5 };
+            const valid = (n) => Number.isInteger(n) && n >= 1;
+            return {
+                name: saved && typeof saved.name === 'string' && saved.name.trim() ? saved.name : base.name,
+                rows: valid(saved && saved.rows) ? saved.rows : base.rows,
+                cols: valid(saved && saved.cols) ? saved.cols : base.cols
+            };
+        }
+
+        // Define painéis e ordem a partir dos dados salvos. Sem lista de ordem
+        // (dados de versões anteriores), mantém os 4 painéis padrão.
+        function applySavedPanels(config, order) {
+            if (config && typeof config === 'object' && Array.isArray(order)) {
+                const ids = [...new Set(order.filter(id => typeof id === 'string' && config[id] && typeof config[id] === 'object'))];
+                if (ids.length > 0) {
+                    panelOrder = ids;
+                    panelConfig = {};
+                    ids.forEach(id => { panelConfig[id] = sanitizePanel(config[id], defaultPanelConfig[id]); });
+                    return;
+                }
+            }
+            const merged = { ...defaultPanelConfig, ...(config && typeof config === 'object' ? config : {}) };
+            panelConfig = {};
+            Object.keys(merged).forEach(id => { panelConfig[id] = sanitizePanel(merged[id], defaultPanelConfig[id]); });
+            panelOrder = [...defaultPanelOrder, ...Object.keys(panelConfig).filter(id => !defaultPanelOrder.includes(id))];
+        }
+
         function loadState() {
             try {
                 const savedState = localStorage.getItem(storageKey);
@@ -1706,15 +2223,14 @@
                     }
                 }
                 const savedConfig = localStorage.getItem(panelConfigStorageKey);
-                if (savedConfig) {
-                    const parsedConfig = JSON.parse(savedConfig);
-                    panelConfig = { ...defaultPanelConfig, ...parsedConfig };
-                } else {
-                    panelConfig = { ...defaultPanelConfig };
-                }
+                const savedOrder = localStorage.getItem(panelOrderStorageKey);
+                applySavedPanels(
+                    savedConfig ? JSON.parse(savedConfig) : null,
+                    savedOrder ? JSON.parse(savedOrder) : null
+                );
             } catch (e) {
                 console.error("Erro ao carregar estado:", e);
-                panelConfig = { ...defaultPanelConfig };
+                applySavedPanels(null, null);
             }
             normalizeState();
         }
@@ -1727,10 +2243,10 @@
                 if (stateDirty || !saved || !isValidSavedState(saved.appState)) return;
 
                 appState = saved.appState;
-                if (saved.panelConfig) panelConfig = { ...defaultPanelConfig, ...saved.panelConfig };
+                applySavedPanels(saved.panelConfig, saved.panelOrder);
                 normalizeState();
                 clearHistory();
-                recreateAllSeats();
+                renderPanels();
                 updateUI();
                 writeStateToLocalStorage();
                 console.info('Dados recuperados da cópia interna (IndexedDB).');
@@ -1799,7 +2315,9 @@
 
         document.addEventListener('keydown', (event) => {
             if (event.key !== 'Escape') return;
-            if (appSettingsModal.classList.contains('show')) {
+            if (document.getElementById('release-notes-modal').classList.contains('show')) {
+                closeReleaseNotes();
+            } else if (appSettingsModal.classList.contains('show')) {
                 closeAppSettings();
             } else if (document.getElementById('settings-modal').classList.contains('show')) {
                 closeModal(document.getElementById('settings-modal'));
@@ -2118,11 +2636,11 @@
         }
 
         document.getElementById('share-button').addEventListener('click', () => {
-            const leftSeats = appState.seats.left ? appState.seats.left.length : 0;
-            const centerSeats = appState.seats.center ? appState.seats.center.length : 0;
-            const rightSeats = appState.seats.right ? appState.seats.right.length : 0;
-            const salaBSeats = appState.seats.salaB ? appState.seats.salaB.length : 0;
-            const total = leftSeats + centerSeats + rightSeats + salaBSeats + appState.standCount;
+            const panelCounts = panelOrder.map(id => ({
+                name: panelConfig[id].name,
+                count: appState.seats[id] ? appState.seats[id].length : 0
+            }));
+            const total = panelCounts.reduce((sum, panel) => sum + panel.count, 0) + appState.standCount;
 
             // Formatação da data atual dinamicamente (DD/MM/AAAA)
             const today = new Date();
@@ -2137,10 +2655,9 @@
             // Se o modo detalhado (borda vermelha) estiver ativado por duplo clique
             if (isAdvancedShareMode) {
                 text += `\n\n`;
-                if (leftSeats > 0) text += `• ${panelConfig.left.name}: ${leftSeats}\n`;
-                if (centerSeats > 0) text += `• ${panelConfig.center.name}: ${centerSeats}\n`;
-                if (rightSeats > 0) text += `• ${panelConfig.right.name}: ${rightSeats}\n`;
-                if (salaBSeats > 0) text += `• ${panelConfig.salaB.name}: ${salaBSeats}\n`;
+                panelCounts.forEach(panel => {
+                    if (panel.count > 0) text += `• ${panel.name}: ${panel.count}\n`;
+                });
                 if (appState.standCount > 0) text += `• EM PÉ: ${appState.standCount}\n`;
             }
 
@@ -2157,21 +2674,88 @@
         const rowsCountSpan = document.getElementById('rows-count');
         const colsCountSpan = document.getElementById('cols-count');
 
-        document.querySelectorAll('.settings-button').forEach(button => {
-            button.addEventListener('click', (e) => {
-                currentSectionId = e.currentTarget.dataset.section;
-                const config = panelConfig[currentSectionId];
-                
-                panelNameDisplay.textContent = config.name;
-                panelNameEditInput.value = config.name;
-                panelNameDisplay.classList.remove('hidden');
-                panelNameEditInput.classList.add('hidden');
+        const movePanelUpButton = document.getElementById('move-panel-up-button');
+        const movePanelDownButton = document.getElementById('move-panel-down-button');
+        const removePanelButton = document.getElementById('remove-panel-button');
+        const removePanelHint = document.getElementById('remove-panel-hint');
+        let removeConfirmTimer = null;
 
-                rowsCountSpan.textContent = config.rows;
-                colsCountSpan.textContent = config.cols;
+        function resetRemoveConfirmation() {
+            if (removeConfirmTimer) {
+                clearTimeout(removeConfirmTimer);
+                removeConfirmTimer = null;
+            }
+            removePanelButton.textContent = 'Remover painel';
+            removePanelButton.classList.remove('confirming');
+        }
 
-                openModal(settingsModal, closeModalButton);
-            });
+        // Habilita/desabilita posição e remoção conforme o painel aberto
+        function refreshPanelModalControls() {
+            const index = panelOrder.indexOf(currentSectionId);
+            movePanelUpButton.disabled = index <= 0;
+            movePanelDownButton.disabled = index === -1 || index >= panelOrder.length - 1;
+            removePanelButton.disabled = panelOrder.length <= 1;
+            removePanelHint.textContent = panelOrder.length <= 1 ? 'É preciso manter ao menos um painel.' : '';
+            resetRemoveConfirmation();
+        }
+
+        function openPanelSettings(sectionId) {
+            const config = panelConfig[sectionId];
+            if (!config) return;
+            currentSectionId = sectionId;
+
+            panelNameDisplay.textContent = config.name;
+            panelNameEditInput.value = config.name;
+            panelNameDisplay.classList.remove('hidden');
+            panelNameEditInput.classList.add('hidden');
+
+            rowsCountSpan.textContent = config.rows;
+            colsCountSpan.textContent = config.cols;
+
+            refreshPanelModalControls();
+            openModal(settingsModal, closeModalButton);
+        }
+
+        // Os painéis podem ser recriados, então ouvimos os cliques no conjunto
+        document.querySelector('.stage').addEventListener('click', (event) => {
+            const button = event.target.closest('.settings-button');
+            if (button) openPanelSettings(button.dataset.section);
+        });
+
+        movePanelUpButton.addEventListener('click', () => {
+            movePanel(currentSectionId, -1);
+            refreshPanelModalControls();
+        });
+
+        movePanelDownButton.addEventListener('click', () => {
+            movePanel(currentSectionId, 1);
+            refreshPanelModalControls();
+        });
+
+        // Remover pede um segundo toque para confirmar (apaga as pessoas marcadas no painel)
+        removePanelButton.addEventListener('click', () => {
+            if (panelOrder.length <= 1 || !currentSectionId) return;
+            if (!removeConfirmTimer) {
+                removePanelButton.textContent = 'Toque de novo para remover';
+                removePanelButton.classList.add('confirming');
+                removeConfirmTimer = setTimeout(resetRemoveConfirmation, 4000);
+                return;
+            }
+            const idToRemove = currentSectionId;
+            resetRemoveConfirmation();
+            currentSectionId = null;
+            closeModal(settingsModal);
+            removePanel(idToRemove);
+        });
+
+        document.getElementById('add-panel-button').addEventListener('click', () => {
+            if (panelOrder.length >= MAX_PANELS) return;
+            closeAppSettings();
+            const newId = addPanel();
+            if (!newId) return;
+            const title = document.getElementById(`${newId}-title`);
+            if (title) title.scrollIntoView({ block: 'center' });
+            openPanelSettings(newId); // já abre os ajustes para renomear e definir linhas/colunas
         });
 
         closeModalButton.addEventListener('click', () => {
@@ -2250,24 +2834,10 @@
             updateUI();
         });
 
-        // Carrega a versão do sw.js dinamicamente e exibe no rodapé
+        // Mostra a versão do app no rodapé
         function loadVersionInFooter() {
-            fetch('/contador-assistencia/sw.js')
-                .then(response => response.text())
-                .then(text => {
-                    const match = text.match(/CACHE_NAME\s*=\s*['"]([^'"]+)['"]/);
-                    if (match && match[1]) {
-                        // Extrai apenas a versão (ex: 'v1.0.4' de 'contador-assistencia-v1.0.4')
-                        const fullCacheName = match[1];
-                        const versionMatch = fullCacheName.match(/v\d+\.\d+\.\d+/);
-                        const version = versionMatch ? versionMatch[0] : fullCacheName;
-                        const footerSpan = document.getElementById('footer-text');
-                        if (footerSpan) {
-                            footerSpan.textContent = `by macgldesign — ${version}`;
-                        }
-                    }
-                })
-                .catch(err => console.warn('Não foi possível carregar a versão dinamicamente:', err));
+            const footerSpan = document.getElementById('footer-text');
+            if (footerSpan) footerSpan.textContent = `by macgldesign — v${APP_VERSION}`;
         }
 
         // --- Interruptores das preferências (tela ligada e vibração) ---
@@ -2309,7 +2879,8 @@
         // Inicialização
         window.addEventListener('DOMContentLoaded', () => {
             loadState();
-            recreateAllSeats();
+            if (stateLoadedFromStorage) loadHistory();
+            renderPanels();
             updateUI();
             adjustContentPadding();
             loadVersionInFooter();
@@ -2319,6 +2890,7 @@
             // Garante que exista uma cópia de segurança logo na primeira abertura após a atualização
             if (stateLoadedFromStorage) mirrorStateToIdb();
             else restoreFromIdbIfNeeded();
+            maybeShowReleaseNotes();
         });
 
         window.addEventListener('resize', adjustContentPadding);
@@ -2331,19 +2903,13 @@
           navigator.serviceWorker.register('/contador-assistencia/sw.js')
             .then(reg => {
               console.log('Service Worker registrado!', reg);
-              // Força a buscar nova versão no GitHub Pages sempre que abrir
-              reg.update();
+              // Busca nova versão ao abrir e periodicamente; só AVISA, não recarrega
+              watchForAppUpdates(reg);
             })
             .catch(err => console.error('Erro ao registrar Service Worker:', err));
 
-          // Recarrega a página automaticamente assim que o novo Service Worker assumir
-          let refreshing = false;
-          navigator.serviceWorker.addEventListener('controllerchange', () => {
-            if (!refreshing) {
-              refreshing = true;
-              window.location.reload();
-            }
-          });
+          // Quando uma versão nova assume, avisa em vez de recarregar a página sozinha
+          navigator.serviceWorker.addEventListener('controllerchange', () => checkForNewVersion(true));
         });
       }
     </script>
