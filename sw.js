@@ -1,4 +1,4 @@
-const CACHE_NAME = 'contador-assistencia-v1.2.1';
+const CACHE_NAME = 'contador-assistencia-v1.2.0';
 // Fontes ficam num cache à parte para sobreviver às atualizações do app
 const FONT_CACHE = 'contador-assistencia-fonts-v1';
 const FONT_HOSTS = ['fonts.googleapis.com', 'fonts.gstatic.com'];
