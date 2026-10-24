@@ -855,13 +855,6 @@
             }
         }
 
-        /* --- Impede o "puxar para atualizar" do navegador:
-               ele recarregava o app sem querer no meio da contagem --- */
-        html,
-        body {
-            overscroll-behavior-y: none;
-        }
-
         /* --- Notas de atualização --- */
         .release-notes-content {
             overflow: hidden;
@@ -1029,6 +1022,12 @@
             background: #dc2626;
         }
 
+        /* --- Com uma janela aberta, a página de fundo não rola --- */
+        html.modal-open,
+        html.modal-open body {
+            overflow: hidden;
+        }
+
         .hidden {
             display: none !important;
         }
@@ -1132,9 +1131,9 @@
 
     <div class="flex-row-center mt-2 scrolling-actions" id="action-bar">
         <button id="history-undo-button" class="app-undo-button" type="button" aria-label="Desfazer última ação" title="Desfazer" disabled>
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <polyline points="9 14 4 9 9 4"></polyline>
-                <path d="M20 20v-7a4 4 0 0 0-4-4H4"></path>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M9 14 4 9l5-5"></path>
+                <path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5 5.5 5.5 0 0 1-5.5 5.5H11"></path>
             </svg>
         </button>
         <button id="reset-button" class="reset-button">ZERAR</button>
@@ -1143,9 +1142,8 @@
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-share-2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
         </button>
         <button id="app-settings-button" class="app-settings-button" type="button" aria-label="Configurações" title="Configurações">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <circle cx="12" cy="12" r="3"></circle>
-                <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-1.4 1.4-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-2v-.2a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1-1.4-1.4.1-.1A1.7 1.7 0 0 0 9.4 15a1.7 1.7 0 0 0-1.6-1H7.6v-2h.2a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L9 9l1.4-1.4.1.1a1.7 1.7 0 0 0 1.9.3 1.7 1.7 0 0 0 1-1.6v-.2h2v.2a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 9l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2v2H21a1.7 1.7 0 0 0-1.6 1z"></path>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path fill-rule="evenodd" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" d="M10.49 3.53 L11.06 1.49 L12.94 1.49 L13.51 3.53 A8.60 8.60 0 0 1 16.92 4.94 L18.77 3.91 L20.09 5.23 L19.06 7.08 A8.60 8.60 0 0 1 20.47 10.49 L22.51 11.06 L22.51 12.94 L20.47 13.51 A8.60 8.60 0 0 1 19.06 16.92 L20.09 18.77 L18.77 20.09 L16.92 19.06 A8.60 8.60 0 0 1 13.51 20.47 L12.94 22.51 L11.06 22.51 L10.49 20.47 A8.60 8.60 0 0 1 7.08 19.06 L5.23 20.09 L3.91 18.77 L4.94 16.92 A8.60 8.60 0 0 1 3.53 13.51 L1.49 12.94 L1.49 11.06 L3.53 10.49 A8.60 8.60 0 0 1 4.94 7.08 L3.91 5.23 L5.23 3.91 L7.08 4.94 A8.60 8.60 0 0 1 10.49 3.53 Z M5.15 12.00 a6.85 6.85 0 1 0 13.70 0 a6.85 6.85 0 1 0 -13.70 0 Z"/><path fill-rule="evenodd" d="M8.00 12.00 a4 4 0 1 0 8 0 a4 4 0 1 0 -8 0 Z M9.90 12.00 a2.1 2.1 0 1 0 4.2 0 a2.1 2.1 0 1 0 -4.2 0 Z"/><g stroke="currentColor" stroke-width="0.5" stroke-linejoin="round"><path d="M-0.5 -3.3 L-0.22 -7.9 Q0 -8.25 0.22 -7.9 L0.5 -3.3 Z" transform="translate(12 12) rotate(0)"/><path d="M-0.5 -3.3 L-0.22 -7.9 Q0 -8.25 0.22 -7.9 L0.5 -3.3 Z" transform="translate(12 12) rotate(120)"/><path d="M-0.5 -3.3 L-0.22 -7.9 Q0 -8.25 0.22 -7.9 L0.5 -3.3 Z" transform="translate(12 12) rotate(240)"/></g>
             </svg>
         </button>
     </div>
@@ -1279,10 +1277,6 @@
                 </div>
             </div>
             <div>
-                <p class="app-settings-label">Dados</p>
-                <p class="setting-hint" id="storage-status">Verificando…</p>
-            </div>
-            <div>
                 <p class="app-settings-label">Painéis</p>
                 <button type="button" class="link-button" id="add-panel-button">+ Adicionar painel</button>
                 <p class="setting-hint" id="panel-count-hint"></p>
@@ -1333,6 +1327,22 @@
         }, { passive: false });
         document.addEventListener('touchmove', (event) => {
             if (event.touches.length > 1) event.preventDefault();
+        }, { passive: false });
+
+        // Bloqueia o "puxar para atualizar" do navegador (recarregava o app sem querer).
+        // Feito por JavaScript, e não por overscroll-behavior: essa propriedade, junto com
+        // overflow-x: hidden em html e body, travava a rolagem em Chrome, Edge e Opera.
+        let pullStartY = null;
+        document.addEventListener('touchstart', (event) => {
+            pullStartY = event.touches.length === 1 ? event.touches[0].clientY : null;
+        }, { passive: true });
+        document.addEventListener('touchmove', (event) => {
+            if (pullStartY === null || event.touches.length !== 1 || !event.cancelable) return;
+            try { if (window.self !== window.top) return; } catch (e) { return; } // só quando o app roda sozinho
+            if (event.target.closest && event.target.closest('.settings-modal')) return; // rolagem dentro das janelas
+            const atTop = (window.scrollY || document.documentElement.scrollTop) <= 0;
+            const pullingDown = event.touches[0].clientY - pullStartY > 8;
+            if (atTop && pullingDown) event.preventDefault();
         }, { passive: false });
         window.addEventListener('wheel', (event) => {
             if (event.ctrlKey) event.preventDefault();
@@ -1517,12 +1527,25 @@
             if (!wakeLockSentinel) requestWakeLock();
         }, { passive: true });
 
+        // Arrastar o dedo no fundo escuro não deve rolar a página (iOS antigo ignora o bloqueio por CSS)
+        document.querySelectorAll('.settings-modal').forEach(overlay => {
+            overlay.addEventListener('touchmove', (event) => {
+                if (event.target === overlay) event.preventDefault();
+            }, { passive: false });
+        });
+
         // Janelas (modais): levam o foco para dentro e devolvem ao fechar
         let lastFocusedBeforeModal = null;
+
+        // Com qualquer janela aberta, a página de fundo fica parada
+        function updateScrollLock() {
+            document.documentElement.classList.toggle('modal-open', !!document.querySelector('.settings-modal.show'));
+        }
 
         function openModal(modal, focusTarget) {
             lastFocusedBeforeModal = document.activeElement;
             modal.classList.add('show');
+            updateScrollLock();
             if (!focusTarget) return;
             // A janela só fica "visível" (focável) um instante depois do início da transição
             setTimeout(() => {
@@ -1533,6 +1556,7 @@
 
         function closeModal(modal) {
             modal.classList.remove('show');
+            updateScrollLock();
             const target = lastFocusedBeforeModal;
             lastFocusedBeforeModal = null;
             if (target && document.contains(target) && typeof target.focus === 'function') {
@@ -1545,6 +1569,23 @@
         //   1) troque APP_VERSION aqui e CACHE_NAME no sw.js (mesmo número);
         //   2) reescreva RELEASE_NOTES só com o que mudou NESTA versão (não acumule as antigas).
         // Quem pular versões vê apenas as notas da versão atual.
+        // ┌─ ALTERAÇÕES PENDENTES — feitas DEPOIS da v1.2.0 e ainda NÃO publicadas ─────────────┐
+        // │ Ao publicar: subir APP_VERSION/CACHE_NAME, passar estes itens para RELEASE_NOTES │
+        // │ (em linguagem simples, sem repetir o que se anulou) e esvaziar esta lista.       │
+        // │                                                                                    │
+        // │ [Melhorias]                                                                        │
+        // │  - Novo ícone de engrenagem no botão de Configurações.                             │
+        // │  - Novo ícone de desfazer, mais moderno.                                           │
+        // │  - Com uma janela aberta (Configurações, ajustes do painel, Novidades), a tela     │
+        // │    de fundo não rola mais.                                                         │
+        // │  - Texto das novidades da versão pode ser selecionado e copiado.                   │
+        // │  - Removidas as informações de "Dados" das Configurações.                          │
+        // │ [Correções]                                                                        │
+        // │  - "Entendi" nas novidades abertas pelas Configurações volta para as Configurações.│
+        // │  - Setas do teclado voltam a rolar a página depois de clicar num assento.          │
+        // │  - Corrigido: a rolagem da página podia travar em alguns navegadores (Chrome, Edge,  │
+        // │    Opera) por causa do bloqueio do "puxar para atualizar"; o bloqueio foi refeito.   │
+        // └────────────────────────────────────────────────────────────────────────────────────┘
         const APP_VERSION = '1.2.0';
         const RELEASE_NOTES = [
             {
@@ -1633,9 +1674,16 @@
             openModal(document.getElementById('release-notes-modal'), document.getElementById('release-notes-confirm'));
         }
 
+        // Se as novidades foram abertas pelas Configurações, "Entendi" volta para elas
+        let releaseNotesReturnToSettings = false;
+
         function closeReleaseNotes() {
             markReleaseNotesSeen();
             closeModal(document.getElementById('release-notes-modal'));
+            if (releaseNotesReturnToSettings) {
+                releaseNotesReturnToSettings = false;
+                openModal(document.getElementById('app-settings-modal'), document.getElementById('show-release-notes-button'));
+            }
         }
 
         // Mostra uma única vez por versão; versões puladas são ignoradas
@@ -1652,6 +1700,7 @@
         document.getElementById('release-notes-confirm').addEventListener('click', closeReleaseNotes);
         document.getElementById('show-release-notes-button').addEventListener('click', () => {
             closeAppSettings();
+            releaseNotesReturnToSettings = true;
             openReleaseNotes();
         });
         document.getElementById('about-version').textContent = APP_VERSION;
@@ -2263,26 +2312,7 @@
             persistenceRequested = true;
             navigator.storage.persisted()
                 .then(already => already || navigator.storage.persist())
-                .then(refreshStorageStatus)
                 .catch(() => { /* não suportado */ });
-        }
-
-        async function refreshStorageStatus() {
-            const element = document.getElementById('storage-status');
-            if (!element) return;
-
-            if (!(navigator.storage && navigator.storage.persisted)) {
-                element.textContent = 'Os dados ficam salvos neste aparelho, com uma cópia de segurança interna.';
-                return;
-            }
-            try {
-                const persisted = await navigator.storage.persisted();
-                element.textContent = persisted
-                    ? 'Armazenamento protegido: o navegador não apaga os dados automaticamente.'
-                    : 'Os dados ficam salvos neste aparelho, com uma cópia de segurança interna. Instalar o app na tela inicial ajuda a protegê-los contra limpezas automáticas.';
-            } catch (e) {
-                element.textContent = 'Os dados ficam salvos neste aparelho, com uma cópia de segurança interna.';
-            }
         }
 
         document.getElementById('undo-button').addEventListener('click', undoLastAction);
@@ -2298,7 +2328,6 @@
 
         appSettingsButton.addEventListener('click', () => {
             updateThemeOptions();
-            refreshStorageStatus();
             openModal(appSettingsModal, closeAppSettingsButton);
         });
 
@@ -2337,8 +2366,22 @@
             seat.tabIndex = 0;
         }
 
+        // As setas só navegam entre assentos quando o foco chegou pelo teclado (Tab).
+        // Depois de um clique do mouse ou toque, elas rolam a página normalmente.
+        // (:focus-visible não serve: o navegador o ativa assim que qualquer tecla é pressionada.)
+        let lastInputWasKeyboard = false;
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Tab') lastInputWasKeyboard = true;
+        }, true);
+        document.addEventListener('pointerdown', () => {
+            lastInputWasKeyboard = false;
+        }, true);
+
         function handleSeatKeydown(event) {
             const seat = event.currentTarget;
+            // Enter/Espaço sempre marcam; setas/Home/End só navegam quando o foco veio do teclado
+            const isNavigationKey = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'].includes(event.key);
+            if (isNavigationKey && !lastInputWasKeyboard) return;
             const row = seat.parentElement;
             const grid = row ? row.parentElement : null;
             if (!row || !grid) return;
@@ -2885,7 +2928,6 @@
             adjustContentPadding();
             loadVersionInFooter();
             initPreferenceControls();
-            refreshStorageStatus();
             requestWakeLock();
             // Garante que exista uma cópia de segurança logo na primeira abertura após a atualização
             if (stateLoadedFromStorage) mirrorStateToIdb();
